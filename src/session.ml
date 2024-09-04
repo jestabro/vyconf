@@ -1,6 +1,7 @@
 module CT = Vyos1x.Config_tree
 module VT = Vyos1x.Vytree
 module RT = Vyos1x.Reference_tree
+module VC = Vyconfd_config.Vyconf_config
 module D = Directories
 
 exception Session_error of string
@@ -12,7 +13,7 @@ type cfg_op =
 type world = {
     running_config: CT.t;
     reference_tree: RT.t;
-    vyconf_config: Vyconf_config.t;
+    vyconf_config: VC.t;
     dirs: Directories.t
 }
 
@@ -37,12 +38,12 @@ let make world client_app user = {
 let string_of_op op =
     match op with
     | CfgSet (path, value, _) ->
-        let path_str = Util.string_of_list path in
+        let path_str = Vyos1x.Util.string_of_list path in
         (match value with
          | None -> Printf.sprintf "set %s" path_str
          | Some v -> Printf.sprintf "set %s \"%s\"" path_str v)
     | CfgDelete (path, value) ->
-        let path_str = Util.string_of_list path in
+        let path_str = Vyos1x.Util.string_of_list path in
         (match value with
          | None -> Printf.sprintf "delete %s" path_str
          | Some v -> Printf.sprintf "delete %s \"%s\"" path_str v)
@@ -110,7 +111,7 @@ let exists _w s path =
     VT.exists s.proposed_config path
 
 let show_config _w s path fmt =
-    let open Vyconf_types in
+    let open Vyconf_connect.Vyconf_types in
     if (path <> []) && not (VT.exists s.proposed_config path) then
         raise (Session_error ("Path does not exist")) 
     else

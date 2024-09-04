@@ -5,7 +5,7 @@ type cfg_op =
 type world = {
     running_config: Vyos1x.Config_tree.t;
     reference_tree: Vyos1x.Reference_tree.t;
-    vyconf_config: Vyconf_config.t;
+    vyconf_config: Vyconfd_config.Vyconf_config.t;
     dirs: Directories.t
 }
 
@@ -40,4 +40,4 @@ val list_children : world -> session_data -> string list -> string list
 
 val string_of_op : cfg_op -> string
 
-val show_config : world -> session_data -> string list -> Vyconf_types.request_config_format -> string
+val show_config : world -> session_data -> string list -> Vyconf_connect.Vyconf_types.request_config_format -> string

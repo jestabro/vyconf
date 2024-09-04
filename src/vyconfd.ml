@@ -1,11 +1,12 @@
 open Lwt
-open Defaults
-open Vyconf_config
-open Vyconf_pb
-open Vyconf_types
+
+open Vyconf_connect.Vyconf_types
+open Vyconf_connect.Vyconf_pb
+open Vyconfd_config.Defaults
 
 module FP = FilePath
 module CT = Vyos1x.Config_tree
+module Gen = Vyos1x.Generate
 
 (* On UNIX, self_init uses /dev/random for seed *)
 let () = Random.self_init ()
@@ -137,12 +138,12 @@ let send_response oc resp =
     let enc = Pbrt.Encoder.create () in
     let%lwt () = encode_response resp enc |> return in
     let%lwt resp_msg = Pbrt.Encoder.to_bytes enc |> return in
-    let%lwt () = Message.write oc resp_msg in
+    let%lwt () = Vyconf_connect.Message.write oc resp_msg in
     Lwt.return ()
 
 let rec handle_connection world ic oc fd () =
     try%lwt
-        let%lwt req_msg = Message.read ic in
+        let%lwt req_msg = Vyconf_connect.Message.read ic in
         let%lwt req =
             try
                 let envelope = decode_request_envelope (Pbrt.Decoder.of_bytes req_msg) in
@@ -196,7 +197,7 @@ let main_loop basepath world () =
 
 let load_interface_definitions dir =
 (*    let open Session in *)
-    let reftree = Startup.load_interface_definitions dir in
+    let reftree = Gen.load_interface_definitions dir in
     match reftree with
     | Ok r -> r
     | Error s -> Startup.panic s
