@@ -47,7 +47,7 @@ let string_of_op op =
          | None -> Printf.sprintf "delete %s" path_str
          | Some v -> Printf.sprintf "delete %s \"%s\"" path_str v)
 
-(*
+
 let set_modified s =
     if s.modified = true then s
     else {s with modified = true}
@@ -78,7 +78,7 @@ let delete w s path =
     let op = CfgDelete (path, value) in
     let config = apply_cfg_op op s.proposed_config in
     {s with proposed_config=config; changeset=(op :: s.changeset)}
-*)
+
 let get_value w s path =
     if not (VT.exists s.proposed_config path) then
         raise (Session_error ("Path does not exist"))

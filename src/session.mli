@@ -21,11 +21,15 @@ type session_data = {
 exception Session_error of string
 
 val make : world -> string -> string -> session_data
-(*
+
+val set_modified : session_data -> session_data
+
+val apply_changes : cfg_op list -> Vyos1x.Config_tree.t -> Vyos1x.Config_tree.t
+
 val set : world -> session_data -> string list -> session_data
 
 val delete : world -> session_data -> string list -> session_data
-*)
+
 val get_value : world -> session_data -> string list -> string
 
 val get_values : world -> session_data -> string list -> string list
