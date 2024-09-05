@@ -20,7 +20,7 @@ let relative_dirs = {
 let concat = List.fold_left F.concat ""
 
 let make basepath conf =
-    let open Vyconfd_config.Vyconf_config in
+    let open Vyconf_config in
     {
       components = concat [basepath; conf.program_dir; relative_dirs.components];
       validators = concat [basepath; conf.program_dir; relative_dirs.validators];

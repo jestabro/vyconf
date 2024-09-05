@@ -5,7 +5,7 @@ type cfg_op =
 type world = {
     running_config: Vyos1x.Config_tree.t;
     reference_tree: Vyos1x.Reference_tree.t;
-    vyconf_config: Vyconfd_config.Vyconf_config.t;
+    vyconf_config: Vyconf_config.t;
     dirs: Directories.t
 }
 

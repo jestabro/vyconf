@@ -7,6 +7,8 @@ open Vyconfd_config.Defaults
 module FP = FilePath
 module CT = Vyos1x.Config_tree
 module Gen = Vyos1x.Generate
+module Session = Vyconfd_config.Session
+module Directories = Vyconfd_config.Directories
 
 (* On UNIX, self_init uses /dev/random for seed *)
 let () = Random.self_init ()

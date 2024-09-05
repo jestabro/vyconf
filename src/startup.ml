@@ -41,7 +41,7 @@ let load_daemon_config path =
 
 (** Check if appliance directories exist and panic if they don't *)
 let check_dirs dirs =
-    let res = Directories.test dirs in
+    let res = Vyconfd_config.Directories.test dirs in
     match res with
     | Ok _ -> ()
     | Error err -> panic err

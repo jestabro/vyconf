@@ -1,7 +1,6 @@
 module CT = Vyos1x.Config_tree
 module VT = Vyos1x.Vytree
 module RT = Vyos1x.Reference_tree
-module VC = Vyconfd_config.Vyconf_config
 module D = Directories
 
 exception Session_error of string
@@ -13,7 +12,7 @@ type cfg_op =
 type world = {
     running_config: CT.t;
     reference_tree: RT.t;
-    vyconf_config: VC.t;
+    vyconf_config: Vyconf_config.t;
     dirs: Directories.t
 }
 
