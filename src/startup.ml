@@ -124,3 +124,12 @@ let load_interface_definitions dir =
         | Error msg -> Error msg end
     with Bad_interface_definition msg -> Error msg
 
+module I = Vyos1x.Internal.Make(Vyos1x.Reference_tree)
+
+let read_reference_tree file =
+    try
+        let chan = open_in file in
+        let s = really_input_string chan (in_channel_length chan) in
+        let reftree = I.read_internal s in
+        Ok reftree
+    with Sys_error msg -> Error msg
