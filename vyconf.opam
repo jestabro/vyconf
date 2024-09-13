@@ -18,7 +18,6 @@ depends: [
   "dune" {build & >= "1.4.0"}
   "ocaml-protoc" {build}
   "ounit" {build}
-  "batteries" {build}
   "lwt" {build & >= "4.1.0"}
   "lwt_ppx" {build}
   "lwt_log" {build}
