@@ -219,7 +219,7 @@ let make_world config dirs =
 let () = 
   let () = Arg.parse args (fun _ -> ()) usage in
   let vc = Startup.load_daemon_config !config_file in
-  let () = Lwt_log.load_rules ("* -> " ^ vc.log_level) in
+  let () = Lwt_log.load_rules ~fail_on_error:true ("* -> " ^ vc.log_level) in
   let dirs = Directories.make !basepath vc in
   Startup.check_validators_dir dirs;
   let world = make_world vc dirs in
