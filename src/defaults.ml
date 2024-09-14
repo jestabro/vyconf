@@ -11,5 +11,5 @@ let defaults = {
     pid_file = "/var/run/vyconfd.pid";
     socket = "/var/run/vyconfd.sock";
     log_template = "$(date) $(name)[$(pid)]: $(message)";
-    log_level = "notice";
+    log_level = "debug";
 }
