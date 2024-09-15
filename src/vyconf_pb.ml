@@ -1,4 +1,4 @@
-[@@@ocaml.warning "-27-30-39"]
+[@@@ocaml.warning "-27-30-39-44"]
 
 type request_setup_session_mutable = {
   mutable client_application : string option;
@@ -204,20 +204,579 @@ let default_response_mutable () : response_mutable = {
   warning = None;
 }
 
+[@@@ocaml.warning "-27-30-39"]
 
-let rec decode_request_config_format d = 
+(** {2 Formatters} *)
+
+let rec pp_request_config_format fmt (v:Vyconf_types.request_config_format) =
+  match v with
+  | Curly -> Format.fprintf fmt "Curly"
+  | Json -> Format.fprintf fmt "Json"
+
+let rec pp_request_output_format fmt (v:Vyconf_types.request_output_format) =
+  match v with
+  | Out_plain -> Format.fprintf fmt "Out_plain"
+  | Out_json -> Format.fprintf fmt "Out_json"
+
+let rec pp_request_status fmt (v:Vyconf_types.request_status) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_unit fmt ()
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+let rec pp_request_setup_session fmt (v:Vyconf_types.request_setup_session) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "client_application" (Pbrt.Pp.pp_option Pbrt.Pp.pp_string) fmt v.client_application;
+    Pbrt.Pp.pp_record_field ~first:false "on_behalf_of" (Pbrt.Pp.pp_option Pbrt.Pp.pp_int32) fmt v.on_behalf_of;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+let rec pp_request_set fmt (v:Vyconf_types.request_set) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "path" (Pbrt.Pp.pp_list Pbrt.Pp.pp_string) fmt v.path;
+    Pbrt.Pp.pp_record_field ~first:false "ephemeral" (Pbrt.Pp.pp_option Pbrt.Pp.pp_bool) fmt v.ephemeral;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+let rec pp_request_delete fmt (v:Vyconf_types.request_delete) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "path" (Pbrt.Pp.pp_list Pbrt.Pp.pp_string) fmt v.path;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+let rec pp_request_rename fmt (v:Vyconf_types.request_rename) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "edit_level" (Pbrt.Pp.pp_list Pbrt.Pp.pp_string) fmt v.edit_level;
+    Pbrt.Pp.pp_record_field ~first:false "from" Pbrt.Pp.pp_string fmt v.from;
+    Pbrt.Pp.pp_record_field ~first:false "to_" Pbrt.Pp.pp_string fmt v.to_;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+let rec pp_request_copy fmt (v:Vyconf_types.request_copy) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "edit_level" (Pbrt.Pp.pp_list Pbrt.Pp.pp_string) fmt v.edit_level;
+    Pbrt.Pp.pp_record_field ~first:false "from" Pbrt.Pp.pp_string fmt v.from;
+    Pbrt.Pp.pp_record_field ~first:false "to_" Pbrt.Pp.pp_string fmt v.to_;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+let rec pp_request_comment fmt (v:Vyconf_types.request_comment) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "path" (Pbrt.Pp.pp_list Pbrt.Pp.pp_string) fmt v.path;
+    Pbrt.Pp.pp_record_field ~first:false "comment" Pbrt.Pp.pp_string fmt v.comment;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+let rec pp_request_commit fmt (v:Vyconf_types.request_commit) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "confirm" (Pbrt.Pp.pp_option Pbrt.Pp.pp_bool) fmt v.confirm;
+    Pbrt.Pp.pp_record_field ~first:false "confirm_timeout" (Pbrt.Pp.pp_option Pbrt.Pp.pp_int32) fmt v.confirm_timeout;
+    Pbrt.Pp.pp_record_field ~first:false "comment" (Pbrt.Pp.pp_option Pbrt.Pp.pp_string) fmt v.comment;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+let rec pp_request_rollback fmt (v:Vyconf_types.request_rollback) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "revision" Pbrt.Pp.pp_int32 fmt v.revision;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+let rec pp_request_load fmt (v:Vyconf_types.request_load) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "location" Pbrt.Pp.pp_string fmt v.location;
+    Pbrt.Pp.pp_record_field ~first:false "format" (Pbrt.Pp.pp_option pp_request_config_format) fmt v.format;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+let rec pp_request_merge fmt (v:Vyconf_types.request_merge) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "location" Pbrt.Pp.pp_string fmt v.location;
+    Pbrt.Pp.pp_record_field ~first:false "format" (Pbrt.Pp.pp_option pp_request_config_format) fmt v.format;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+let rec pp_request_save fmt (v:Vyconf_types.request_save) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "location" Pbrt.Pp.pp_string fmt v.location;
+    Pbrt.Pp.pp_record_field ~first:false "format" (Pbrt.Pp.pp_option pp_request_config_format) fmt v.format;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+let rec pp_request_show_config fmt (v:Vyconf_types.request_show_config) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "path" (Pbrt.Pp.pp_list Pbrt.Pp.pp_string) fmt v.path;
+    Pbrt.Pp.pp_record_field ~first:false "format" (Pbrt.Pp.pp_option pp_request_config_format) fmt v.format;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+let rec pp_request_exists fmt (v:Vyconf_types.request_exists) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "path" (Pbrt.Pp.pp_list Pbrt.Pp.pp_string) fmt v.path;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+let rec pp_request_get_value fmt (v:Vyconf_types.request_get_value) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "path" (Pbrt.Pp.pp_list Pbrt.Pp.pp_string) fmt v.path;
+    Pbrt.Pp.pp_record_field ~first:false "output_format" (Pbrt.Pp.pp_option pp_request_output_format) fmt v.output_format;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+let rec pp_request_get_values fmt (v:Vyconf_types.request_get_values) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "path" (Pbrt.Pp.pp_list Pbrt.Pp.pp_string) fmt v.path;
+    Pbrt.Pp.pp_record_field ~first:false "output_format" (Pbrt.Pp.pp_option pp_request_output_format) fmt v.output_format;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+let rec pp_request_list_children fmt (v:Vyconf_types.request_list_children) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "path" (Pbrt.Pp.pp_list Pbrt.Pp.pp_string) fmt v.path;
+    Pbrt.Pp.pp_record_field ~first:false "output_format" (Pbrt.Pp.pp_option pp_request_output_format) fmt v.output_format;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+let rec pp_request_run_op_mode fmt (v:Vyconf_types.request_run_op_mode) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "path" (Pbrt.Pp.pp_list Pbrt.Pp.pp_string) fmt v.path;
+    Pbrt.Pp.pp_record_field ~first:false "output_format" (Pbrt.Pp.pp_option pp_request_output_format) fmt v.output_format;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+let rec pp_request_confirm fmt (v:Vyconf_types.request_confirm) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_unit fmt ()
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+let rec pp_request_enter_configuration_mode fmt (v:Vyconf_types.request_enter_configuration_mode) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "exclusive" Pbrt.Pp.pp_bool fmt v.exclusive;
+    Pbrt.Pp.pp_record_field ~first:false "override_exclusive" Pbrt.Pp.pp_bool fmt v.override_exclusive;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+let rec pp_request_exit_configuration_mode fmt (v:Vyconf_types.request_exit_configuration_mode) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_unit fmt ()
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+let rec pp_request fmt (v:Vyconf_types.request) =
+  match v with
+  | Status  -> Format.fprintf fmt "Status"
+  | Setup_session x -> Format.fprintf fmt "@[<hv2>Setup_session(@,%a)@]" pp_request_setup_session x
+  | Set x -> Format.fprintf fmt "@[<hv2>Set(@,%a)@]" pp_request_set x
+  | Delete x -> Format.fprintf fmt "@[<hv2>Delete(@,%a)@]" pp_request_delete x
+  | Rename x -> Format.fprintf fmt "@[<hv2>Rename(@,%a)@]" pp_request_rename x
+  | Copy x -> Format.fprintf fmt "@[<hv2>Copy(@,%a)@]" pp_request_copy x
+  | Comment x -> Format.fprintf fmt "@[<hv2>Comment(@,%a)@]" pp_request_comment x
+  | Commit x -> Format.fprintf fmt "@[<hv2>Commit(@,%a)@]" pp_request_commit x
+  | Rollback x -> Format.fprintf fmt "@[<hv2>Rollback(@,%a)@]" pp_request_rollback x
+  | Merge x -> Format.fprintf fmt "@[<hv2>Merge(@,%a)@]" pp_request_merge x
+  | Save x -> Format.fprintf fmt "@[<hv2>Save(@,%a)@]" pp_request_save x
+  | Show_config x -> Format.fprintf fmt "@[<hv2>Show_config(@,%a)@]" pp_request_show_config x
+  | Exists x -> Format.fprintf fmt "@[<hv2>Exists(@,%a)@]" pp_request_exists x
+  | Get_value x -> Format.fprintf fmt "@[<hv2>Get_value(@,%a)@]" pp_request_get_value x
+  | Get_values x -> Format.fprintf fmt "@[<hv2>Get_values(@,%a)@]" pp_request_get_values x
+  | List_children x -> Format.fprintf fmt "@[<hv2>List_children(@,%a)@]" pp_request_list_children x
+  | Run_op_mode x -> Format.fprintf fmt "@[<hv2>Run_op_mode(@,%a)@]" pp_request_run_op_mode x
+  | Confirm  -> Format.fprintf fmt "Confirm"
+  | Configure x -> Format.fprintf fmt "@[<hv2>Configure(@,%a)@]" pp_request_enter_configuration_mode x
+  | Exit_configure  -> Format.fprintf fmt "Exit_configure"
+  | Teardown x -> Format.fprintf fmt "@[<hv2>Teardown(@,%a)@]" Pbrt.Pp.pp_string x
+
+let rec pp_request_envelope fmt (v:Vyconf_types.request_envelope) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "token" (Pbrt.Pp.pp_option Pbrt.Pp.pp_string) fmt v.token;
+    Pbrt.Pp.pp_record_field ~first:false "request" pp_request fmt v.request;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+let rec pp_status fmt (v:Vyconf_types.status) =
+  match v with
+  | Success -> Format.fprintf fmt "Success"
+  | Fail -> Format.fprintf fmt "Fail"
+  | Invalid_path -> Format.fprintf fmt "Invalid_path"
+  | Invalid_value -> Format.fprintf fmt "Invalid_value"
+  | Commit_in_progress -> Format.fprintf fmt "Commit_in_progress"
+  | Configuration_locked -> Format.fprintf fmt "Configuration_locked"
+  | Internal_error -> Format.fprintf fmt "Internal_error"
+  | Permission_denied -> Format.fprintf fmt "Permission_denied"
+  | Path_already_exists -> Format.fprintf fmt "Path_already_exists"
+
+let rec pp_response fmt (v:Vyconf_types.response) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "status" pp_status fmt v.status;
+    Pbrt.Pp.pp_record_field ~first:false "output" (Pbrt.Pp.pp_option Pbrt.Pp.pp_string) fmt v.output;
+    Pbrt.Pp.pp_record_field ~first:false "error" (Pbrt.Pp.pp_option Pbrt.Pp.pp_string) fmt v.error;
+    Pbrt.Pp.pp_record_field ~first:false "warning" (Pbrt.Pp.pp_option Pbrt.Pp.pp_string) fmt v.warning;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+[@@@ocaml.warning "-27-30-39"]
+
+(** {2 Protobuf Encoding} *)
+
+let rec encode_pb_request_config_format (v:Vyconf_types.request_config_format) encoder =
+  match v with
+  | Curly -> Pbrt.Encoder.int_as_varint (0) encoder
+  | Json -> Pbrt.Encoder.int_as_varint 1 encoder
+
+let rec encode_pb_request_output_format (v:Vyconf_types.request_output_format) encoder =
+  match v with
+  | Out_plain -> Pbrt.Encoder.int_as_varint (0) encoder
+  | Out_json -> Pbrt.Encoder.int_as_varint 1 encoder
+
+let rec encode_pb_request_status (v:Vyconf_types.request_status) encoder = 
+()
+
+let rec encode_pb_request_setup_session (v:Vyconf_types.request_setup_session) encoder = 
+  begin match v.client_application with
+  | Some x -> 
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
+  | None -> ();
+  end;
+  begin match v.on_behalf_of with
+  | Some x -> 
+    Pbrt.Encoder.int32_as_varint x encoder;
+    Pbrt.Encoder.key 2 Pbrt.Varint encoder; 
+  | None -> ();
+  end;
+  ()
+
+let rec encode_pb_request_set (v:Vyconf_types.request_set) encoder = 
+  Pbrt.List_util.rev_iter_with (fun x encoder -> 
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
+  ) v.path encoder;
+  begin match v.ephemeral with
+  | Some x -> 
+    Pbrt.Encoder.bool x encoder;
+    Pbrt.Encoder.key 3 Pbrt.Varint encoder; 
+  | None -> ();
+  end;
+  ()
+
+let rec encode_pb_request_delete (v:Vyconf_types.request_delete) encoder = 
+  Pbrt.List_util.rev_iter_with (fun x encoder -> 
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
+  ) v.path encoder;
+  ()
+
+let rec encode_pb_request_rename (v:Vyconf_types.request_rename) encoder = 
+  Pbrt.List_util.rev_iter_with (fun x encoder -> 
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
+  ) v.edit_level encoder;
+  Pbrt.Encoder.string v.from encoder;
+  Pbrt.Encoder.key 2 Pbrt.Bytes encoder; 
+  Pbrt.Encoder.string v.to_ encoder;
+  Pbrt.Encoder.key 3 Pbrt.Bytes encoder; 
+  ()
+
+let rec encode_pb_request_copy (v:Vyconf_types.request_copy) encoder = 
+  Pbrt.List_util.rev_iter_with (fun x encoder -> 
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
+  ) v.edit_level encoder;
+  Pbrt.Encoder.string v.from encoder;
+  Pbrt.Encoder.key 2 Pbrt.Bytes encoder; 
+  Pbrt.Encoder.string v.to_ encoder;
+  Pbrt.Encoder.key 3 Pbrt.Bytes encoder; 
+  ()
+
+let rec encode_pb_request_comment (v:Vyconf_types.request_comment) encoder = 
+  Pbrt.List_util.rev_iter_with (fun x encoder -> 
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
+  ) v.path encoder;
+  Pbrt.Encoder.string v.comment encoder;
+  Pbrt.Encoder.key 2 Pbrt.Bytes encoder; 
+  ()
+
+let rec encode_pb_request_commit (v:Vyconf_types.request_commit) encoder = 
+  begin match v.confirm with
+  | Some x -> 
+    Pbrt.Encoder.bool x encoder;
+    Pbrt.Encoder.key 1 Pbrt.Varint encoder; 
+  | None -> ();
+  end;
+  begin match v.confirm_timeout with
+  | Some x -> 
+    Pbrt.Encoder.int32_as_varint x encoder;
+    Pbrt.Encoder.key 2 Pbrt.Varint encoder; 
+  | None -> ();
+  end;
+  begin match v.comment with
+  | Some x -> 
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 3 Pbrt.Bytes encoder; 
+  | None -> ();
+  end;
+  ()
+
+let rec encode_pb_request_rollback (v:Vyconf_types.request_rollback) encoder = 
+  Pbrt.Encoder.int32_as_varint v.revision encoder;
+  Pbrt.Encoder.key 1 Pbrt.Varint encoder; 
+  ()
+
+let rec encode_pb_request_load (v:Vyconf_types.request_load) encoder = 
+  Pbrt.Encoder.string v.location encoder;
+  Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
+  begin match v.format with
+  | Some x -> 
+    encode_pb_request_config_format x encoder;
+    Pbrt.Encoder.key 2 Pbrt.Varint encoder; 
+  | None -> ();
+  end;
+  ()
+
+let rec encode_pb_request_merge (v:Vyconf_types.request_merge) encoder = 
+  Pbrt.Encoder.string v.location encoder;
+  Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
+  begin match v.format with
+  | Some x -> 
+    encode_pb_request_config_format x encoder;
+    Pbrt.Encoder.key 2 Pbrt.Varint encoder; 
+  | None -> ();
+  end;
+  ()
+
+let rec encode_pb_request_save (v:Vyconf_types.request_save) encoder = 
+  Pbrt.Encoder.string v.location encoder;
+  Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
+  begin match v.format with
+  | Some x -> 
+    encode_pb_request_config_format x encoder;
+    Pbrt.Encoder.key 2 Pbrt.Varint encoder; 
+  | None -> ();
+  end;
+  ()
+
+let rec encode_pb_request_show_config (v:Vyconf_types.request_show_config) encoder = 
+  Pbrt.List_util.rev_iter_with (fun x encoder -> 
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
+  ) v.path encoder;
+  begin match v.format with
+  | Some x -> 
+    encode_pb_request_config_format x encoder;
+    Pbrt.Encoder.key 2 Pbrt.Varint encoder; 
+  | None -> ();
+  end;
+  ()
+
+let rec encode_pb_request_exists (v:Vyconf_types.request_exists) encoder = 
+  Pbrt.List_util.rev_iter_with (fun x encoder -> 
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
+  ) v.path encoder;
+  ()
+
+let rec encode_pb_request_get_value (v:Vyconf_types.request_get_value) encoder = 
+  Pbrt.List_util.rev_iter_with (fun x encoder -> 
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
+  ) v.path encoder;
+  begin match v.output_format with
+  | Some x -> 
+    encode_pb_request_output_format x encoder;
+    Pbrt.Encoder.key 2 Pbrt.Varint encoder; 
+  | None -> ();
+  end;
+  ()
+
+let rec encode_pb_request_get_values (v:Vyconf_types.request_get_values) encoder = 
+  Pbrt.List_util.rev_iter_with (fun x encoder -> 
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
+  ) v.path encoder;
+  begin match v.output_format with
+  | Some x -> 
+    encode_pb_request_output_format x encoder;
+    Pbrt.Encoder.key 2 Pbrt.Varint encoder; 
+  | None -> ();
+  end;
+  ()
+
+let rec encode_pb_request_list_children (v:Vyconf_types.request_list_children) encoder = 
+  Pbrt.List_util.rev_iter_with (fun x encoder -> 
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
+  ) v.path encoder;
+  begin match v.output_format with
+  | Some x -> 
+    encode_pb_request_output_format x encoder;
+    Pbrt.Encoder.key 2 Pbrt.Varint encoder; 
+  | None -> ();
+  end;
+  ()
+
+let rec encode_pb_request_run_op_mode (v:Vyconf_types.request_run_op_mode) encoder = 
+  Pbrt.List_util.rev_iter_with (fun x encoder -> 
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
+  ) v.path encoder;
+  begin match v.output_format with
+  | Some x -> 
+    encode_pb_request_output_format x encoder;
+    Pbrt.Encoder.key 2 Pbrt.Varint encoder; 
+  | None -> ();
+  end;
+  ()
+
+let rec encode_pb_request_confirm (v:Vyconf_types.request_confirm) encoder = 
+()
+
+let rec encode_pb_request_enter_configuration_mode (v:Vyconf_types.request_enter_configuration_mode) encoder = 
+  Pbrt.Encoder.bool v.exclusive encoder;
+  Pbrt.Encoder.key 1 Pbrt.Varint encoder; 
+  Pbrt.Encoder.bool v.override_exclusive encoder;
+  Pbrt.Encoder.key 2 Pbrt.Varint encoder; 
+  ()
+
+let rec encode_pb_request_exit_configuration_mode (v:Vyconf_types.request_exit_configuration_mode) encoder = 
+()
+
+let rec encode_pb_request (v:Vyconf_types.request) encoder = 
+  begin match v with
+  | Status ->
+    Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
+    Pbrt.Encoder.empty_nested encoder
+  | Setup_session x ->
+    Pbrt.Encoder.nested encode_pb_request_setup_session x encoder;
+    Pbrt.Encoder.key 2 Pbrt.Bytes encoder; 
+  | Set x ->
+    Pbrt.Encoder.nested encode_pb_request_set x encoder;
+    Pbrt.Encoder.key 3 Pbrt.Bytes encoder; 
+  | Delete x ->
+    Pbrt.Encoder.nested encode_pb_request_delete x encoder;
+    Pbrt.Encoder.key 4 Pbrt.Bytes encoder; 
+  | Rename x ->
+    Pbrt.Encoder.nested encode_pb_request_rename x encoder;
+    Pbrt.Encoder.key 5 Pbrt.Bytes encoder; 
+  | Copy x ->
+    Pbrt.Encoder.nested encode_pb_request_copy x encoder;
+    Pbrt.Encoder.key 6 Pbrt.Bytes encoder; 
+  | Comment x ->
+    Pbrt.Encoder.nested encode_pb_request_comment x encoder;
+    Pbrt.Encoder.key 7 Pbrt.Bytes encoder; 
+  | Commit x ->
+    Pbrt.Encoder.nested encode_pb_request_commit x encoder;
+    Pbrt.Encoder.key 8 Pbrt.Bytes encoder; 
+  | Rollback x ->
+    Pbrt.Encoder.nested encode_pb_request_rollback x encoder;
+    Pbrt.Encoder.key 9 Pbrt.Bytes encoder; 
+  | Merge x ->
+    Pbrt.Encoder.nested encode_pb_request_merge x encoder;
+    Pbrt.Encoder.key 10 Pbrt.Bytes encoder; 
+  | Save x ->
+    Pbrt.Encoder.nested encode_pb_request_save x encoder;
+    Pbrt.Encoder.key 11 Pbrt.Bytes encoder; 
+  | Show_config x ->
+    Pbrt.Encoder.nested encode_pb_request_show_config x encoder;
+    Pbrt.Encoder.key 12 Pbrt.Bytes encoder; 
+  | Exists x ->
+    Pbrt.Encoder.nested encode_pb_request_exists x encoder;
+    Pbrt.Encoder.key 13 Pbrt.Bytes encoder; 
+  | Get_value x ->
+    Pbrt.Encoder.nested encode_pb_request_get_value x encoder;
+    Pbrt.Encoder.key 14 Pbrt.Bytes encoder; 
+  | Get_values x ->
+    Pbrt.Encoder.nested encode_pb_request_get_values x encoder;
+    Pbrt.Encoder.key 15 Pbrt.Bytes encoder; 
+  | List_children x ->
+    Pbrt.Encoder.nested encode_pb_request_list_children x encoder;
+    Pbrt.Encoder.key 16 Pbrt.Bytes encoder; 
+  | Run_op_mode x ->
+    Pbrt.Encoder.nested encode_pb_request_run_op_mode x encoder;
+    Pbrt.Encoder.key 17 Pbrt.Bytes encoder; 
+  | Confirm ->
+    Pbrt.Encoder.key 18 Pbrt.Bytes encoder; 
+    Pbrt.Encoder.empty_nested encoder
+  | Configure x ->
+    Pbrt.Encoder.nested encode_pb_request_enter_configuration_mode x encoder;
+    Pbrt.Encoder.key 19 Pbrt.Bytes encoder; 
+  | Exit_configure ->
+    Pbrt.Encoder.key 20 Pbrt.Bytes encoder; 
+    Pbrt.Encoder.empty_nested encoder
+  | Teardown x ->
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 21 Pbrt.Bytes encoder; 
+  end
+
+let rec encode_pb_request_envelope (v:Vyconf_types.request_envelope) encoder = 
+  begin match v.token with
+  | Some x -> 
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
+  | None -> ();
+  end;
+  Pbrt.Encoder.nested encode_pb_request v.request encoder;
+  Pbrt.Encoder.key 2 Pbrt.Bytes encoder; 
+  ()
+
+let rec encode_pb_status (v:Vyconf_types.status) encoder =
+  match v with
+  | Success -> Pbrt.Encoder.int_as_varint (0) encoder
+  | Fail -> Pbrt.Encoder.int_as_varint 1 encoder
+  | Invalid_path -> Pbrt.Encoder.int_as_varint 2 encoder
+  | Invalid_value -> Pbrt.Encoder.int_as_varint 3 encoder
+  | Commit_in_progress -> Pbrt.Encoder.int_as_varint 4 encoder
+  | Configuration_locked -> Pbrt.Encoder.int_as_varint 5 encoder
+  | Internal_error -> Pbrt.Encoder.int_as_varint 6 encoder
+  | Permission_denied -> Pbrt.Encoder.int_as_varint 7 encoder
+  | Path_already_exists -> Pbrt.Encoder.int_as_varint 8 encoder
+
+let rec encode_pb_response (v:Vyconf_types.response) encoder = 
+  encode_pb_status v.status encoder;
+  Pbrt.Encoder.key 1 Pbrt.Varint encoder; 
+  begin match v.output with
+  | Some x -> 
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 2 Pbrt.Bytes encoder; 
+  | None -> ();
+  end;
+  begin match v.error with
+  | Some x -> 
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 3 Pbrt.Bytes encoder; 
+  | None -> ();
+  end;
+  begin match v.warning with
+  | Some x -> 
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 4 Pbrt.Bytes encoder; 
+  | None -> ();
+  end;
+  ()
+
+[@@@ocaml.warning "-27-30-39"]
+
+(** {2 Protobuf Decoding} *)
+
+let rec decode_pb_request_config_format d = 
   match Pbrt.Decoder.int_as_varint d with
-  | 0 -> (Vyconf_types.Curly:Vyconf_types.request_config_format)
-  | 1 -> (Vyconf_types.Json:Vyconf_types.request_config_format)
+  | 0 -> (Curly:Vyconf_types.request_config_format)
+  | 1 -> (Json:Vyconf_types.request_config_format)
   | _ -> Pbrt.Decoder.malformed_variant "request_config_format"
 
-let rec decode_request_output_format d = 
+let rec decode_pb_request_output_format d = 
   match Pbrt.Decoder.int_as_varint d with
-  | 0 -> (Vyconf_types.Out_plain:Vyconf_types.request_output_format)
-  | 1 -> (Vyconf_types.Out_json:Vyconf_types.request_output_format)
+  | 0 -> (Out_plain:Vyconf_types.request_output_format)
+  | 1 -> (Out_json:Vyconf_types.request_output_format)
   | _ -> Pbrt.Decoder.malformed_variant "request_output_format"
 
-let rec decode_request_setup_session d =
+let rec decode_pb_request_status d =
+  match Pbrt.Decoder.key d with
+  | None -> ();
+  | Some (_, pk) -> 
+    Pbrt.Decoder.unexpected_payload "Unexpected fields in empty message(request_status)" pk
+
+let rec decode_pb_request_setup_session d =
   let v = default_request_setup_session_mutable () in
   let continue__= ref true in
   while !continue__ do
@@ -237,11 +796,11 @@ let rec decode_request_setup_session d =
     | Some (_, payload_kind) -> Pbrt.Decoder.skip d payload_kind
   done;
   ({
-    Vyconf_types.client_application = v.client_application;
-    Vyconf_types.on_behalf_of = v.on_behalf_of;
+    client_application = v.client_application;
+    on_behalf_of = v.on_behalf_of;
   } : Vyconf_types.request_setup_session)
 
-let rec decode_request_set d =
+let rec decode_pb_request_set d =
   let v = default_request_set_mutable () in
   let continue__= ref true in
   while !continue__ do
@@ -262,11 +821,11 @@ let rec decode_request_set d =
     | Some (_, payload_kind) -> Pbrt.Decoder.skip d payload_kind
   done;
   ({
-    Vyconf_types.path = v.path;
-    Vyconf_types.ephemeral = v.ephemeral;
+    path = v.path;
+    ephemeral = v.ephemeral;
   } : Vyconf_types.request_set)
 
-let rec decode_request_delete d =
+let rec decode_pb_request_delete d =
   let v = default_request_delete_mutable () in
   let continue__= ref true in
   while !continue__ do
@@ -282,10 +841,10 @@ let rec decode_request_delete d =
     | Some (_, payload_kind) -> Pbrt.Decoder.skip d payload_kind
   done;
   ({
-    Vyconf_types.path = v.path;
+    path = v.path;
   } : Vyconf_types.request_delete)
 
-let rec decode_request_rename d =
+let rec decode_pb_request_rename d =
   let v = default_request_rename_mutable () in
   let continue__= ref true in
   let to__is_set = ref false in
@@ -315,12 +874,12 @@ let rec decode_request_rename d =
   begin if not !to__is_set then Pbrt.Decoder.missing_field "to_" end;
   begin if not !from_is_set then Pbrt.Decoder.missing_field "from" end;
   ({
-    Vyconf_types.edit_level = v.edit_level;
-    Vyconf_types.from = v.from;
-    Vyconf_types.to_ = v.to_;
+    edit_level = v.edit_level;
+    from = v.from;
+    to_ = v.to_;
   } : Vyconf_types.request_rename)
 
-let rec decode_request_copy d =
+let rec decode_pb_request_copy d =
   let v = default_request_copy_mutable () in
   let continue__= ref true in
   let to__is_set = ref false in
@@ -350,12 +909,12 @@ let rec decode_request_copy d =
   begin if not !to__is_set then Pbrt.Decoder.missing_field "to_" end;
   begin if not !from_is_set then Pbrt.Decoder.missing_field "from" end;
   ({
-    Vyconf_types.edit_level = v.edit_level;
-    Vyconf_types.from = v.from;
-    Vyconf_types.to_ = v.to_;
+    edit_level = v.edit_level;
+    from = v.from;
+    to_ = v.to_;
   } : Vyconf_types.request_copy)
 
-let rec decode_request_comment d =
+let rec decode_pb_request_comment d =
   let v = default_request_comment_mutable () in
   let continue__= ref true in
   let comment_is_set = ref false in
@@ -378,11 +937,11 @@ let rec decode_request_comment d =
   done;
   begin if not !comment_is_set then Pbrt.Decoder.missing_field "comment" end;
   ({
-    Vyconf_types.path = v.path;
-    Vyconf_types.comment = v.comment;
+    path = v.path;
+    comment = v.comment;
   } : Vyconf_types.request_comment)
 
-let rec decode_request_commit d =
+let rec decode_pb_request_commit d =
   let v = default_request_commit_mutable () in
   let continue__= ref true in
   while !continue__ do
@@ -407,12 +966,12 @@ let rec decode_request_commit d =
     | Some (_, payload_kind) -> Pbrt.Decoder.skip d payload_kind
   done;
   ({
-    Vyconf_types.confirm = v.confirm;
-    Vyconf_types.confirm_timeout = v.confirm_timeout;
-    Vyconf_types.comment = v.comment;
+    confirm = v.confirm;
+    confirm_timeout = v.confirm_timeout;
+    comment = v.comment;
   } : Vyconf_types.request_commit)
 
-let rec decode_request_rollback d =
+let rec decode_pb_request_rollback d =
   let v = default_request_rollback_mutable () in
   let continue__= ref true in
   let revision_is_set = ref false in
@@ -429,10 +988,10 @@ let rec decode_request_rollback d =
   done;
   begin if not !revision_is_set then Pbrt.Decoder.missing_field "revision" end;
   ({
-    Vyconf_types.revision = v.revision;
+    revision = v.revision;
   } : Vyconf_types.request_rollback)
 
-let rec decode_request_load d =
+let rec decode_pb_request_load d =
   let v = default_request_load_mutable () in
   let continue__= ref true in
   let location_is_set = ref false in
@@ -446,7 +1005,7 @@ let rec decode_request_load d =
     | Some (1, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(request_load), field(1)" pk
     | Some (2, Pbrt.Varint) -> begin
-      v.format <- Some (decode_request_config_format d);
+      v.format <- Some (decode_pb_request_config_format d);
     end
     | Some (2, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(request_load), field(2)" pk
@@ -454,11 +1013,11 @@ let rec decode_request_load d =
   done;
   begin if not !location_is_set then Pbrt.Decoder.missing_field "location" end;
   ({
-    Vyconf_types.location = v.location;
-    Vyconf_types.format = v.format;
+    location = v.location;
+    format = v.format;
   } : Vyconf_types.request_load)
 
-let rec decode_request_merge d =
+let rec decode_pb_request_merge d =
   let v = default_request_merge_mutable () in
   let continue__= ref true in
   let location_is_set = ref false in
@@ -472,7 +1031,7 @@ let rec decode_request_merge d =
     | Some (1, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(request_merge), field(1)" pk
     | Some (2, Pbrt.Varint) -> begin
-      v.format <- Some (decode_request_config_format d);
+      v.format <- Some (decode_pb_request_config_format d);
     end
     | Some (2, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(request_merge), field(2)" pk
@@ -480,11 +1039,11 @@ let rec decode_request_merge d =
   done;
   begin if not !location_is_set then Pbrt.Decoder.missing_field "location" end;
   ({
-    Vyconf_types.location = v.location;
-    Vyconf_types.format = v.format;
+    location = v.location;
+    format = v.format;
   } : Vyconf_types.request_merge)
 
-let rec decode_request_save d =
+let rec decode_pb_request_save d =
   let v = default_request_save_mutable () in
   let continue__= ref true in
   let location_is_set = ref false in
@@ -498,7 +1057,7 @@ let rec decode_request_save d =
     | Some (1, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(request_save), field(1)" pk
     | Some (2, Pbrt.Varint) -> begin
-      v.format <- Some (decode_request_config_format d);
+      v.format <- Some (decode_pb_request_config_format d);
     end
     | Some (2, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(request_save), field(2)" pk
@@ -506,11 +1065,11 @@ let rec decode_request_save d =
   done;
   begin if not !location_is_set then Pbrt.Decoder.missing_field "location" end;
   ({
-    Vyconf_types.location = v.location;
-    Vyconf_types.format = v.format;
+    location = v.location;
+    format = v.format;
   } : Vyconf_types.request_save)
 
-let rec decode_request_show_config d =
+let rec decode_pb_request_show_config d =
   let v = default_request_show_config_mutable () in
   let continue__= ref true in
   while !continue__ do
@@ -524,18 +1083,18 @@ let rec decode_request_show_config d =
     | Some (1, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(request_show_config), field(1)" pk
     | Some (2, Pbrt.Varint) -> begin
-      v.format <- Some (decode_request_config_format d);
+      v.format <- Some (decode_pb_request_config_format d);
     end
     | Some (2, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(request_show_config), field(2)" pk
     | Some (_, payload_kind) -> Pbrt.Decoder.skip d payload_kind
   done;
   ({
-    Vyconf_types.path = v.path;
-    Vyconf_types.format = v.format;
+    path = v.path;
+    format = v.format;
   } : Vyconf_types.request_show_config)
 
-let rec decode_request_exists d =
+let rec decode_pb_request_exists d =
   let v = default_request_exists_mutable () in
   let continue__= ref true in
   while !continue__ do
@@ -551,10 +1110,10 @@ let rec decode_request_exists d =
     | Some (_, payload_kind) -> Pbrt.Decoder.skip d payload_kind
   done;
   ({
-    Vyconf_types.path = v.path;
+    path = v.path;
   } : Vyconf_types.request_exists)
 
-let rec decode_request_get_value d =
+let rec decode_pb_request_get_value d =
   let v = default_request_get_value_mutable () in
   let continue__= ref true in
   while !continue__ do
@@ -568,18 +1127,18 @@ let rec decode_request_get_value d =
     | Some (1, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(request_get_value), field(1)" pk
     | Some (2, Pbrt.Varint) -> begin
-      v.output_format <- Some (decode_request_output_format d);
+      v.output_format <- Some (decode_pb_request_output_format d);
     end
     | Some (2, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(request_get_value), field(2)" pk
     | Some (_, payload_kind) -> Pbrt.Decoder.skip d payload_kind
   done;
   ({
-    Vyconf_types.path = v.path;
-    Vyconf_types.output_format = v.output_format;
+    path = v.path;
+    output_format = v.output_format;
   } : Vyconf_types.request_get_value)
 
-let rec decode_request_get_values d =
+let rec decode_pb_request_get_values d =
   let v = default_request_get_values_mutable () in
   let continue__= ref true in
   while !continue__ do
@@ -593,18 +1152,18 @@ let rec decode_request_get_values d =
     | Some (1, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(request_get_values), field(1)" pk
     | Some (2, Pbrt.Varint) -> begin
-      v.output_format <- Some (decode_request_output_format d);
+      v.output_format <- Some (decode_pb_request_output_format d);
     end
     | Some (2, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(request_get_values), field(2)" pk
     | Some (_, payload_kind) -> Pbrt.Decoder.skip d payload_kind
   done;
   ({
-    Vyconf_types.path = v.path;
-    Vyconf_types.output_format = v.output_format;
+    path = v.path;
+    output_format = v.output_format;
   } : Vyconf_types.request_get_values)
 
-let rec decode_request_list_children d =
+let rec decode_pb_request_list_children d =
   let v = default_request_list_children_mutable () in
   let continue__= ref true in
   while !continue__ do
@@ -618,18 +1177,18 @@ let rec decode_request_list_children d =
     | Some (1, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(request_list_children), field(1)" pk
     | Some (2, Pbrt.Varint) -> begin
-      v.output_format <- Some (decode_request_output_format d);
+      v.output_format <- Some (decode_pb_request_output_format d);
     end
     | Some (2, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(request_list_children), field(2)" pk
     | Some (_, payload_kind) -> Pbrt.Decoder.skip d payload_kind
   done;
   ({
-    Vyconf_types.path = v.path;
-    Vyconf_types.output_format = v.output_format;
+    path = v.path;
+    output_format = v.output_format;
   } : Vyconf_types.request_list_children)
 
-let rec decode_request_run_op_mode d =
+let rec decode_pb_request_run_op_mode d =
   let v = default_request_run_op_mode_mutable () in
   let continue__= ref true in
   while !continue__ do
@@ -643,18 +1202,24 @@ let rec decode_request_run_op_mode d =
     | Some (1, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(request_run_op_mode), field(1)" pk
     | Some (2, Pbrt.Varint) -> begin
-      v.output_format <- Some (decode_request_output_format d);
+      v.output_format <- Some (decode_pb_request_output_format d);
     end
     | Some (2, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(request_run_op_mode), field(2)" pk
     | Some (_, payload_kind) -> Pbrt.Decoder.skip d payload_kind
   done;
   ({
-    Vyconf_types.path = v.path;
-    Vyconf_types.output_format = v.output_format;
+    path = v.path;
+    output_format = v.output_format;
   } : Vyconf_types.request_run_op_mode)
 
-let rec decode_request_enter_configuration_mode d =
+let rec decode_pb_request_confirm d =
+  match Pbrt.Decoder.key d with
+  | None -> ();
+  | Some (_, pk) -> 
+    Pbrt.Decoder.unexpected_payload "Unexpected fields in empty message(request_confirm)" pk
+
+let rec decode_pb_request_enter_configuration_mode d =
   let v = default_request_enter_configuration_mode_mutable () in
   let continue__= ref true in
   let override_exclusive_is_set = ref false in
@@ -678,35 +1243,50 @@ let rec decode_request_enter_configuration_mode d =
   begin if not !override_exclusive_is_set then Pbrt.Decoder.missing_field "override_exclusive" end;
   begin if not !exclusive_is_set then Pbrt.Decoder.missing_field "exclusive" end;
   ({
-    Vyconf_types.exclusive = v.exclusive;
-    Vyconf_types.override_exclusive = v.override_exclusive;
+    exclusive = v.exclusive;
+    override_exclusive = v.override_exclusive;
   } : Vyconf_types.request_enter_configuration_mode)
 
-let rec decode_request d = 
+let rec decode_pb_request_exit_configuration_mode d =
+  match Pbrt.Decoder.key d with
+  | None -> ();
+  | Some (_, pk) -> 
+    Pbrt.Decoder.unexpected_payload "Unexpected fields in empty message(request_exit_configuration_mode)" pk
+
+let rec decode_pb_request d = 
   let rec loop () = 
     let ret:Vyconf_types.request = match Pbrt.Decoder.key d with
       | None -> Pbrt.Decoder.malformed_variant "request"
-      | Some (1, _) -> (Pbrt.Decoder.empty_nested d ; Vyconf_types.Status)
-      | Some (2, _) -> Vyconf_types.Setup_session (decode_request_setup_session (Pbrt.Decoder.nested d))
-      | Some (3, _) -> Vyconf_types.Set (decode_request_set (Pbrt.Decoder.nested d))
-      | Some (4, _) -> Vyconf_types.Delete (decode_request_delete (Pbrt.Decoder.nested d))
-      | Some (5, _) -> Vyconf_types.Rename (decode_request_rename (Pbrt.Decoder.nested d))
-      | Some (6, _) -> Vyconf_types.Copy (decode_request_copy (Pbrt.Decoder.nested d))
-      | Some (7, _) -> Vyconf_types.Comment (decode_request_comment (Pbrt.Decoder.nested d))
-      | Some (8, _) -> Vyconf_types.Commit (decode_request_commit (Pbrt.Decoder.nested d))
-      | Some (9, _) -> Vyconf_types.Rollback (decode_request_rollback (Pbrt.Decoder.nested d))
-      | Some (10, _) -> Vyconf_types.Merge (decode_request_merge (Pbrt.Decoder.nested d))
-      | Some (11, _) -> Vyconf_types.Save (decode_request_save (Pbrt.Decoder.nested d))
-      | Some (12, _) -> Vyconf_types.Show_config (decode_request_show_config (Pbrt.Decoder.nested d))
-      | Some (13, _) -> Vyconf_types.Exists (decode_request_exists (Pbrt.Decoder.nested d))
-      | Some (14, _) -> Vyconf_types.Get_value (decode_request_get_value (Pbrt.Decoder.nested d))
-      | Some (15, _) -> Vyconf_types.Get_values (decode_request_get_values (Pbrt.Decoder.nested d))
-      | Some (16, _) -> Vyconf_types.List_children (decode_request_list_children (Pbrt.Decoder.nested d))
-      | Some (17, _) -> Vyconf_types.Run_op_mode (decode_request_run_op_mode (Pbrt.Decoder.nested d))
-      | Some (18, _) -> (Pbrt.Decoder.empty_nested d ; Vyconf_types.Confirm)
-      | Some (19, _) -> Vyconf_types.Configure (decode_request_enter_configuration_mode (Pbrt.Decoder.nested d))
-      | Some (20, _) -> (Pbrt.Decoder.empty_nested d ; Vyconf_types.Exit_configure)
-      | Some (21, _) -> Vyconf_types.Teardown (Pbrt.Decoder.string d)
+      | Some (1, _) -> begin 
+        Pbrt.Decoder.empty_nested d ;
+        (Status : Vyconf_types.request)
+      end
+      | Some (2, _) -> (Setup_session (decode_pb_request_setup_session (Pbrt.Decoder.nested d)) : Vyconf_types.request) 
+      | Some (3, _) -> (Set (decode_pb_request_set (Pbrt.Decoder.nested d)) : Vyconf_types.request) 
+      | Some (4, _) -> (Delete (decode_pb_request_delete (Pbrt.Decoder.nested d)) : Vyconf_types.request) 
+      | Some (5, _) -> (Rename (decode_pb_request_rename (Pbrt.Decoder.nested d)) : Vyconf_types.request) 
+      | Some (6, _) -> (Copy (decode_pb_request_copy (Pbrt.Decoder.nested d)) : Vyconf_types.request) 
+      | Some (7, _) -> (Comment (decode_pb_request_comment (Pbrt.Decoder.nested d)) : Vyconf_types.request) 
+      | Some (8, _) -> (Commit (decode_pb_request_commit (Pbrt.Decoder.nested d)) : Vyconf_types.request) 
+      | Some (9, _) -> (Rollback (decode_pb_request_rollback (Pbrt.Decoder.nested d)) : Vyconf_types.request) 
+      | Some (10, _) -> (Merge (decode_pb_request_merge (Pbrt.Decoder.nested d)) : Vyconf_types.request) 
+      | Some (11, _) -> (Save (decode_pb_request_save (Pbrt.Decoder.nested d)) : Vyconf_types.request) 
+      | Some (12, _) -> (Show_config (decode_pb_request_show_config (Pbrt.Decoder.nested d)) : Vyconf_types.request) 
+      | Some (13, _) -> (Exists (decode_pb_request_exists (Pbrt.Decoder.nested d)) : Vyconf_types.request) 
+      | Some (14, _) -> (Get_value (decode_pb_request_get_value (Pbrt.Decoder.nested d)) : Vyconf_types.request) 
+      | Some (15, _) -> (Get_values (decode_pb_request_get_values (Pbrt.Decoder.nested d)) : Vyconf_types.request) 
+      | Some (16, _) -> (List_children (decode_pb_request_list_children (Pbrt.Decoder.nested d)) : Vyconf_types.request) 
+      | Some (17, _) -> (Run_op_mode (decode_pb_request_run_op_mode (Pbrt.Decoder.nested d)) : Vyconf_types.request) 
+      | Some (18, _) -> begin 
+        Pbrt.Decoder.empty_nested d ;
+        (Confirm : Vyconf_types.request)
+      end
+      | Some (19, _) -> (Configure (decode_pb_request_enter_configuration_mode (Pbrt.Decoder.nested d)) : Vyconf_types.request) 
+      | Some (20, _) -> begin 
+        Pbrt.Decoder.empty_nested d ;
+        (Exit_configure : Vyconf_types.request)
+      end
+      | Some (21, _) -> (Teardown (Pbrt.Decoder.string d) : Vyconf_types.request) 
       | Some (n, payload_kind) -> (
         Pbrt.Decoder.skip d payload_kind; 
         loop () 
@@ -716,7 +1296,7 @@ let rec decode_request d =
   in
   loop ()
 
-let rec decode_request_envelope d =
+let rec decode_pb_request_envelope d =
   let v = default_request_envelope_mutable () in
   let continue__= ref true in
   let request_is_set = ref false in
@@ -730,7 +1310,7 @@ let rec decode_request_envelope d =
     | Some (1, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(request_envelope), field(1)" pk
     | Some (2, Pbrt.Bytes) -> begin
-      v.request <- decode_request (Pbrt.Decoder.nested d); request_is_set := true;
+      v.request <- decode_pb_request (Pbrt.Decoder.nested d); request_is_set := true;
     end
     | Some (2, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(request_envelope), field(2)" pk
@@ -738,24 +1318,24 @@ let rec decode_request_envelope d =
   done;
   begin if not !request_is_set then Pbrt.Decoder.missing_field "request" end;
   ({
-    Vyconf_types.token = v.token;
-    Vyconf_types.request = v.request;
+    token = v.token;
+    request = v.request;
   } : Vyconf_types.request_envelope)
 
-let rec decode_status d = 
+let rec decode_pb_status d = 
   match Pbrt.Decoder.int_as_varint d with
-  | 0 -> (Vyconf_types.Success:Vyconf_types.status)
-  | 1 -> (Vyconf_types.Fail:Vyconf_types.status)
-  | 2 -> (Vyconf_types.Invalid_path:Vyconf_types.status)
-  | 3 -> (Vyconf_types.Invalid_value:Vyconf_types.status)
-  | 4 -> (Vyconf_types.Commit_in_progress:Vyconf_types.status)
-  | 5 -> (Vyconf_types.Configuration_locked:Vyconf_types.status)
-  | 6 -> (Vyconf_types.Internal_error:Vyconf_types.status)
-  | 7 -> (Vyconf_types.Permission_denied:Vyconf_types.status)
-  | 8 -> (Vyconf_types.Path_already_exists:Vyconf_types.status)
+  | 0 -> (Success:Vyconf_types.status)
+  | 1 -> (Fail:Vyconf_types.status)
+  | 2 -> (Invalid_path:Vyconf_types.status)
+  | 3 -> (Invalid_value:Vyconf_types.status)
+  | 4 -> (Commit_in_progress:Vyconf_types.status)
+  | 5 -> (Configuration_locked:Vyconf_types.status)
+  | 6 -> (Internal_error:Vyconf_types.status)
+  | 7 -> (Permission_denied:Vyconf_types.status)
+  | 8 -> (Path_already_exists:Vyconf_types.status)
   | _ -> Pbrt.Decoder.malformed_variant "status"
 
-let rec decode_response d =
+let rec decode_pb_response d =
   let v = default_response_mutable () in
   let continue__= ref true in
   let status_is_set = ref false in
@@ -764,7 +1344,7 @@ let rec decode_response d =
     | None -> (
     ); continue__ := false
     | Some (1, Pbrt.Varint) -> begin
-      v.status <- decode_status d; status_is_set := true;
+      v.status <- decode_pb_status d; status_is_set := true;
     end
     | Some (1, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(response), field(1)" pk
@@ -787,335 +1367,8 @@ let rec decode_response d =
   done;
   begin if not !status_is_set then Pbrt.Decoder.missing_field "status" end;
   ({
-    Vyconf_types.status = v.status;
-    Vyconf_types.output = v.output;
-    Vyconf_types.error = v.error;
-    Vyconf_types.warning = v.warning;
+    status = v.status;
+    output = v.output;
+    error = v.error;
+    warning = v.warning;
   } : Vyconf_types.response)
-
-let rec encode_request_config_format (v:Vyconf_types.request_config_format) encoder =
-  match v with
-  | Vyconf_types.Curly -> Pbrt.Encoder.int_as_varint (0) encoder
-  | Vyconf_types.Json -> Pbrt.Encoder.int_as_varint 1 encoder
-
-let rec encode_request_output_format (v:Vyconf_types.request_output_format) encoder =
-  match v with
-  | Vyconf_types.Out_plain -> Pbrt.Encoder.int_as_varint (0) encoder
-  | Vyconf_types.Out_json -> Pbrt.Encoder.int_as_varint 1 encoder
-
-let rec encode_request_setup_session (v:Vyconf_types.request_setup_session) encoder = 
-  begin match v.Vyconf_types.client_application with
-  | Some x -> 
-    Pbrt.Encoder.key 1 Pbrt.Bytes encoder;
-    Pbrt.Encoder.string x encoder;
-  | None -> ();
-  end;
-  begin match v.Vyconf_types.on_behalf_of with
-  | Some x -> 
-    Pbrt.Encoder.key 2 Pbrt.Varint encoder;
-    Pbrt.Encoder.int32_as_varint x encoder;
-  | None -> ();
-  end;
-  ()
-
-let rec encode_request_set (v:Vyconf_types.request_set) encoder = 
-  List.iter (fun x -> 
-    Pbrt.Encoder.key 1 Pbrt.Bytes encoder;
-    Pbrt.Encoder.string x encoder;
-  ) v.Vyconf_types.path;
-  begin match v.Vyconf_types.ephemeral with
-  | Some x -> 
-    Pbrt.Encoder.key 3 Pbrt.Varint encoder;
-    Pbrt.Encoder.bool x encoder;
-  | None -> ();
-  end;
-  ()
-
-let rec encode_request_delete (v:Vyconf_types.request_delete) encoder = 
-  List.iter (fun x -> 
-    Pbrt.Encoder.key 1 Pbrt.Bytes encoder;
-    Pbrt.Encoder.string x encoder;
-  ) v.Vyconf_types.path;
-  ()
-
-let rec encode_request_rename (v:Vyconf_types.request_rename) encoder = 
-  List.iter (fun x -> 
-    Pbrt.Encoder.key 1 Pbrt.Bytes encoder;
-    Pbrt.Encoder.string x encoder;
-  ) v.Vyconf_types.edit_level;
-  Pbrt.Encoder.key 2 Pbrt.Bytes encoder;
-  Pbrt.Encoder.string v.Vyconf_types.from encoder;
-  Pbrt.Encoder.key 3 Pbrt.Bytes encoder;
-  Pbrt.Encoder.string v.Vyconf_types.to_ encoder;
-  ()
-
-let rec encode_request_copy (v:Vyconf_types.request_copy) encoder = 
-  List.iter (fun x -> 
-    Pbrt.Encoder.key 1 Pbrt.Bytes encoder;
-    Pbrt.Encoder.string x encoder;
-  ) v.Vyconf_types.edit_level;
-  Pbrt.Encoder.key 2 Pbrt.Bytes encoder;
-  Pbrt.Encoder.string v.Vyconf_types.from encoder;
-  Pbrt.Encoder.key 3 Pbrt.Bytes encoder;
-  Pbrt.Encoder.string v.Vyconf_types.to_ encoder;
-  ()
-
-let rec encode_request_comment (v:Vyconf_types.request_comment) encoder = 
-  List.iter (fun x -> 
-    Pbrt.Encoder.key 1 Pbrt.Bytes encoder;
-    Pbrt.Encoder.string x encoder;
-  ) v.Vyconf_types.path;
-  Pbrt.Encoder.key 2 Pbrt.Bytes encoder;
-  Pbrt.Encoder.string v.Vyconf_types.comment encoder;
-  ()
-
-let rec encode_request_commit (v:Vyconf_types.request_commit) encoder = 
-  begin match v.Vyconf_types.confirm with
-  | Some x -> 
-    Pbrt.Encoder.key 1 Pbrt.Varint encoder;
-    Pbrt.Encoder.bool x encoder;
-  | None -> ();
-  end;
-  begin match v.Vyconf_types.confirm_timeout with
-  | Some x -> 
-    Pbrt.Encoder.key 2 Pbrt.Varint encoder;
-    Pbrt.Encoder.int32_as_varint x encoder;
-  | None -> ();
-  end;
-  begin match v.Vyconf_types.comment with
-  | Some x -> 
-    Pbrt.Encoder.key 3 Pbrt.Bytes encoder;
-    Pbrt.Encoder.string x encoder;
-  | None -> ();
-  end;
-  ()
-
-let rec encode_request_rollback (v:Vyconf_types.request_rollback) encoder = 
-  Pbrt.Encoder.key 1 Pbrt.Varint encoder;
-  Pbrt.Encoder.int32_as_varint v.Vyconf_types.revision encoder;
-  ()
-
-let rec encode_request_load (v:Vyconf_types.request_load) encoder = 
-  Pbrt.Encoder.key 1 Pbrt.Bytes encoder;
-  Pbrt.Encoder.string v.Vyconf_types.location encoder;
-  begin match v.Vyconf_types.format with
-  | Some x -> 
-    Pbrt.Encoder.key 2 Pbrt.Varint encoder;
-    encode_request_config_format x encoder;
-  | None -> ();
-  end;
-  ()
-
-let rec encode_request_merge (v:Vyconf_types.request_merge) encoder = 
-  Pbrt.Encoder.key 1 Pbrt.Bytes encoder;
-  Pbrt.Encoder.string v.Vyconf_types.location encoder;
-  begin match v.Vyconf_types.format with
-  | Some x -> 
-    Pbrt.Encoder.key 2 Pbrt.Varint encoder;
-    encode_request_config_format x encoder;
-  | None -> ();
-  end;
-  ()
-
-let rec encode_request_save (v:Vyconf_types.request_save) encoder = 
-  Pbrt.Encoder.key 1 Pbrt.Bytes encoder;
-  Pbrt.Encoder.string v.Vyconf_types.location encoder;
-  begin match v.Vyconf_types.format with
-  | Some x -> 
-    Pbrt.Encoder.key 2 Pbrt.Varint encoder;
-    encode_request_config_format x encoder;
-  | None -> ();
-  end;
-  ()
-
-let rec encode_request_show_config (v:Vyconf_types.request_show_config) encoder = 
-  List.iter (fun x -> 
-    Pbrt.Encoder.key 1 Pbrt.Bytes encoder;
-    Pbrt.Encoder.string x encoder;
-  ) v.Vyconf_types.path;
-  begin match v.Vyconf_types.format with
-  | Some x -> 
-    Pbrt.Encoder.key 2 Pbrt.Varint encoder;
-    encode_request_config_format x encoder;
-  | None -> ();
-  end;
-  ()
-
-let rec encode_request_exists (v:Vyconf_types.request_exists) encoder = 
-  List.iter (fun x -> 
-    Pbrt.Encoder.key 1 Pbrt.Bytes encoder;
-    Pbrt.Encoder.string x encoder;
-  ) v.Vyconf_types.path;
-  ()
-
-let rec encode_request_get_value (v:Vyconf_types.request_get_value) encoder = 
-  List.iter (fun x -> 
-    Pbrt.Encoder.key 1 Pbrt.Bytes encoder;
-    Pbrt.Encoder.string x encoder;
-  ) v.Vyconf_types.path;
-  begin match v.Vyconf_types.output_format with
-  | Some x -> 
-    Pbrt.Encoder.key 2 Pbrt.Varint encoder;
-    encode_request_output_format x encoder;
-  | None -> ();
-  end;
-  ()
-
-let rec encode_request_get_values (v:Vyconf_types.request_get_values) encoder = 
-  List.iter (fun x -> 
-    Pbrt.Encoder.key 1 Pbrt.Bytes encoder;
-    Pbrt.Encoder.string x encoder;
-  ) v.Vyconf_types.path;
-  begin match v.Vyconf_types.output_format with
-  | Some x -> 
-    Pbrt.Encoder.key 2 Pbrt.Varint encoder;
-    encode_request_output_format x encoder;
-  | None -> ();
-  end;
-  ()
-
-let rec encode_request_list_children (v:Vyconf_types.request_list_children) encoder = 
-  List.iter (fun x -> 
-    Pbrt.Encoder.key 1 Pbrt.Bytes encoder;
-    Pbrt.Encoder.string x encoder;
-  ) v.Vyconf_types.path;
-  begin match v.Vyconf_types.output_format with
-  | Some x -> 
-    Pbrt.Encoder.key 2 Pbrt.Varint encoder;
-    encode_request_output_format x encoder;
-  | None -> ();
-  end;
-  ()
-
-let rec encode_request_run_op_mode (v:Vyconf_types.request_run_op_mode) encoder = 
-  List.iter (fun x -> 
-    Pbrt.Encoder.key 1 Pbrt.Bytes encoder;
-    Pbrt.Encoder.string x encoder;
-  ) v.Vyconf_types.path;
-  begin match v.Vyconf_types.output_format with
-  | Some x -> 
-    Pbrt.Encoder.key 2 Pbrt.Varint encoder;
-    encode_request_output_format x encoder;
-  | None -> ();
-  end;
-  ()
-
-let rec encode_request_enter_configuration_mode (v:Vyconf_types.request_enter_configuration_mode) encoder = 
-  Pbrt.Encoder.key 1 Pbrt.Varint encoder;
-  Pbrt.Encoder.bool v.Vyconf_types.exclusive encoder;
-  Pbrt.Encoder.key 2 Pbrt.Varint encoder;
-  Pbrt.Encoder.bool v.Vyconf_types.override_exclusive encoder;
-  ()
-
-let rec encode_request (v:Vyconf_types.request) encoder = 
-  begin match v with
-  | Vyconf_types.Status ->
-    Pbrt.Encoder.key 1 Pbrt.Bytes encoder;
-    Pbrt.Encoder.empty_nested encoder
-  | Vyconf_types.Setup_session x ->
-    Pbrt.Encoder.key 2 Pbrt.Bytes encoder;
-    Pbrt.Encoder.nested encode_request_setup_session x encoder;
-  | Vyconf_types.Set x ->
-    Pbrt.Encoder.key 3 Pbrt.Bytes encoder;
-    Pbrt.Encoder.nested encode_request_set x encoder;
-  | Vyconf_types.Delete x ->
-    Pbrt.Encoder.key 4 Pbrt.Bytes encoder;
-    Pbrt.Encoder.nested encode_request_delete x encoder;
-  | Vyconf_types.Rename x ->
-    Pbrt.Encoder.key 5 Pbrt.Bytes encoder;
-    Pbrt.Encoder.nested encode_request_rename x encoder;
-  | Vyconf_types.Copy x ->
-    Pbrt.Encoder.key 6 Pbrt.Bytes encoder;
-    Pbrt.Encoder.nested encode_request_copy x encoder;
-  | Vyconf_types.Comment x ->
-    Pbrt.Encoder.key 7 Pbrt.Bytes encoder;
-    Pbrt.Encoder.nested encode_request_comment x encoder;
-  | Vyconf_types.Commit x ->
-    Pbrt.Encoder.key 8 Pbrt.Bytes encoder;
-    Pbrt.Encoder.nested encode_request_commit x encoder;
-  | Vyconf_types.Rollback x ->
-    Pbrt.Encoder.key 9 Pbrt.Bytes encoder;
-    Pbrt.Encoder.nested encode_request_rollback x encoder;
-  | Vyconf_types.Merge x ->
-    Pbrt.Encoder.key 10 Pbrt.Bytes encoder;
-    Pbrt.Encoder.nested encode_request_merge x encoder;
-  | Vyconf_types.Save x ->
-    Pbrt.Encoder.key 11 Pbrt.Bytes encoder;
-    Pbrt.Encoder.nested encode_request_save x encoder;
-  | Vyconf_types.Show_config x ->
-    Pbrt.Encoder.key 12 Pbrt.Bytes encoder;
-    Pbrt.Encoder.nested encode_request_show_config x encoder;
-  | Vyconf_types.Exists x ->
-    Pbrt.Encoder.key 13 Pbrt.Bytes encoder;
-    Pbrt.Encoder.nested encode_request_exists x encoder;
-  | Vyconf_types.Get_value x ->
-    Pbrt.Encoder.key 14 Pbrt.Bytes encoder;
-    Pbrt.Encoder.nested encode_request_get_value x encoder;
-  | Vyconf_types.Get_values x ->
-    Pbrt.Encoder.key 15 Pbrt.Bytes encoder;
-    Pbrt.Encoder.nested encode_request_get_values x encoder;
-  | Vyconf_types.List_children x ->
-    Pbrt.Encoder.key 16 Pbrt.Bytes encoder;
-    Pbrt.Encoder.nested encode_request_list_children x encoder;
-  | Vyconf_types.Run_op_mode x ->
-    Pbrt.Encoder.key 17 Pbrt.Bytes encoder;
-    Pbrt.Encoder.nested encode_request_run_op_mode x encoder;
-  | Vyconf_types.Confirm ->
-    Pbrt.Encoder.key 18 Pbrt.Bytes encoder;
-    Pbrt.Encoder.empty_nested encoder
-  | Vyconf_types.Configure x ->
-    Pbrt.Encoder.key 19 Pbrt.Bytes encoder;
-    Pbrt.Encoder.nested encode_request_enter_configuration_mode x encoder;
-  | Vyconf_types.Exit_configure ->
-    Pbrt.Encoder.key 20 Pbrt.Bytes encoder;
-    Pbrt.Encoder.empty_nested encoder
-  | Vyconf_types.Teardown x ->
-    Pbrt.Encoder.key 21 Pbrt.Bytes encoder;
-    Pbrt.Encoder.string x encoder;
-  end
-
-let rec encode_request_envelope (v:Vyconf_types.request_envelope) encoder = 
-  begin match v.Vyconf_types.token with
-  | Some x -> 
-    Pbrt.Encoder.key 1 Pbrt.Bytes encoder;
-    Pbrt.Encoder.string x encoder;
-  | None -> ();
-  end;
-  Pbrt.Encoder.key 2 Pbrt.Bytes encoder;
-  Pbrt.Encoder.nested encode_request v.Vyconf_types.request encoder;
-  ()
-
-let rec encode_status (v:Vyconf_types.status) encoder =
-  match v with
-  | Vyconf_types.Success -> Pbrt.Encoder.int_as_varint (0) encoder
-  | Vyconf_types.Fail -> Pbrt.Encoder.int_as_varint 1 encoder
-  | Vyconf_types.Invalid_path -> Pbrt.Encoder.int_as_varint 2 encoder
-  | Vyconf_types.Invalid_value -> Pbrt.Encoder.int_as_varint 3 encoder
-  | Vyconf_types.Commit_in_progress -> Pbrt.Encoder.int_as_varint 4 encoder
-  | Vyconf_types.Configuration_locked -> Pbrt.Encoder.int_as_varint 5 encoder
-  | Vyconf_types.Internal_error -> Pbrt.Encoder.int_as_varint 6 encoder
-  | Vyconf_types.Permission_denied -> Pbrt.Encoder.int_as_varint 7 encoder
-  | Vyconf_types.Path_already_exists -> Pbrt.Encoder.int_as_varint 8 encoder
-
-let rec encode_response (v:Vyconf_types.response) encoder = 
-  Pbrt.Encoder.key 1 Pbrt.Varint encoder;
-  encode_status v.Vyconf_types.status encoder;
-  begin match v.Vyconf_types.output with
-  | Some x -> 
-    Pbrt.Encoder.key 2 Pbrt.Bytes encoder;
-    Pbrt.Encoder.string x encoder;
-  | None -> ();
-  end;
-  begin match v.Vyconf_types.error with
-  | Some x -> 
-    Pbrt.Encoder.key 3 Pbrt.Bytes encoder;
-    Pbrt.Encoder.string x encoder;
-  | None -> ();
-  end;
-  begin match v.Vyconf_types.warning with
-  | Some x -> 
-    Pbrt.Encoder.key 4 Pbrt.Bytes encoder;
-    Pbrt.Encoder.string x encoder;
-  | None -> ();
-  end;
-  ()

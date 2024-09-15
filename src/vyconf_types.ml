@@ -1,5 +1,4 @@
-[@@@ocaml.warning "-27-30-39"]
-
+[@@@ocaml.warning "-27-30-39-44"]
 
 type request_config_format =
   | Curly 
@@ -8,6 +7,8 @@ type request_config_format =
 type request_output_format =
   | Out_plain 
   | Out_json 
+
+type request_status = unit
 
 type request_setup_session = {
   client_application : string option;
@@ -94,10 +95,14 @@ type request_run_op_mode = {
   output_format : request_output_format option;
 }
 
+type request_confirm = unit
+
 type request_enter_configuration_mode = {
   exclusive : bool;
   override_exclusive : bool;
 }
+
+type request_exit_configuration_mode = unit
 
 type request =
   | Status
@@ -148,6 +153,8 @@ type response = {
 let rec default_request_config_format () = (Curly:request_config_format)
 
 let rec default_request_output_format () = (Out_plain:request_output_format)
+
+let rec default_request_status = ()
 
 let rec default_request_setup_session 
   ?client_application:((client_application:string option) = None)
@@ -285,6 +292,8 @@ let rec default_request_run_op_mode
   output_format;
 }
 
+let rec default_request_confirm = ()
+
 let rec default_request_enter_configuration_mode 
   ?exclusive:((exclusive:bool) = false)
   ?override_exclusive:((override_exclusive:bool) = false)
@@ -292,6 +301,8 @@ let rec default_request_enter_configuration_mode
   exclusive;
   override_exclusive;
 }
+
+let rec default_request_exit_configuration_mode = ()
 
 let rec default_request (): request = Status
 

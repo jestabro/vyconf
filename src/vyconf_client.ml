@@ -43,11 +43,11 @@ let shutdown client =
 
 let do_request client req =
     let enc = Pbrt.Encoder.create () in
-    let () = encode_request_envelope {token=client.session; request=req} enc in
+    let () = encode_pb_request_envelope {token=client.session; request=req} enc in
     let msg = Pbrt.Encoder.to_bytes enc in
     let%lwt () = Vyconf_connect.Message.write client.oc msg in
     let%lwt resp = Vyconf_connect.Message.read client.ic in
-    decode_response (Pbrt.Decoder.of_bytes resp) |> Lwt.return
+    decode_pb_response (Pbrt.Decoder.of_bytes resp) |> Lwt.return
 
 let get_status client =
     let req = Status in

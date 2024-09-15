@@ -1,4 +1,7 @@
-(** vyconf.proto Types *)
+
+(** Code for vyconf.proto *)
+
+(* generated from "data/vyconf.proto", do not edit *)
 
 
 
@@ -11,6 +14,8 @@ type request_config_format =
 type request_output_format =
   | Out_plain 
   | Out_json 
+
+type request_status = unit
 
 type request_setup_session = {
   client_application : string option;
@@ -97,10 +102,14 @@ type request_run_op_mode = {
   output_format : request_output_format option;
 }
 
+type request_confirm = unit
+
 type request_enter_configuration_mode = {
   exclusive : bool;
   override_exclusive : bool;
 }
+
+type request_exit_configuration_mode = unit
 
 type request =
   | Status
@@ -149,13 +158,16 @@ type response = {
 }
 
 
-(** {2 Default values} *)
+(** {2 Basic values} *)
 
 val default_request_config_format : unit -> request_config_format
 (** [default_request_config_format ()] is the default value for type [request_config_format] *)
 
 val default_request_output_format : unit -> request_output_format
 (** [default_request_output_format ()] is the default value for type [request_output_format] *)
+
+val default_request_status : unit
+(** [default_request_status ()] is the default value for type [request_status] *)
 
 val default_request_setup_session : 
   ?client_application:string option ->
@@ -276,12 +288,18 @@ val default_request_run_op_mode :
   request_run_op_mode
 (** [default_request_run_op_mode ()] is the default value for type [request_run_op_mode] *)
 
+val default_request_confirm : unit
+(** [default_request_confirm ()] is the default value for type [request_confirm] *)
+
 val default_request_enter_configuration_mode : 
   ?exclusive:bool ->
   ?override_exclusive:bool ->
   unit ->
   request_enter_configuration_mode
 (** [default_request_enter_configuration_mode ()] is the default value for type [request_enter_configuration_mode] *)
+
+val default_request_exit_configuration_mode : unit
+(** [default_request_exit_configuration_mode ()] is the default value for type [request_exit_configuration_mode] *)
 
 val default_request : unit -> request
 (** [default_request ()] is the default value for type [request] *)
