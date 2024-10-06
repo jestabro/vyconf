@@ -1,5 +1,5 @@
 open Client.Vyconf_client
-open Vyconf_connect.Vyconf_types
+open Vyconf_connect.Vyconf_pbt
 
 type op_t =
     | OpStatus
