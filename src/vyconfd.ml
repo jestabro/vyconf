@@ -97,7 +97,7 @@ let exists world token (req: request_exists) =
 
 let get_value world token (req: request_get_value) =
     try
-        let () = (Lwt_log.debug @@ Printf.sprintf "[%s]\n" (Util.string_of_list req.path)) |> Lwt.ignore_result in
+        let () = (Lwt_log.debug @@ Printf.sprintf "[%s]\n" (Vyos1x.Util.string_of_list req.path)) |> Lwt.ignore_result in
         let value = Session.get_value world (find_session token) req.path in
         let fmt = Option.value req.output_format ~default:Out_plain in
         let value_str =
@@ -113,8 +113,8 @@ let get_values world token (req: request_get_values) =
         let fmt = Option.value req.output_format ~default:Out_plain in
         let values_str =
          (match fmt with
-          | Out_plain -> Util.string_of_list @@ List.map (Printf.sprintf "\'%s\'") values
-          | Out_json -> Util.json_of_list values)
+          | Out_plain -> Vyos1x.Util.string_of_list @@ List.map (Printf.sprintf "\'%s\'") values
+          | Out_json -> Vyos1x.Util.json_of_list values)
         in {response_tmpl with output=(Some values_str)}
     with Session.Session_error msg -> {response_tmpl with status=Fail; error=(Some msg)}
 
@@ -124,8 +124,8 @@ let list_children world token (req: request_list_children) =
         let fmt = Option.value req.output_format ~default:Out_plain in
         let children_str =
           (match fmt with
-          | Out_plain -> Util.string_of_list @@ List.map (Printf.sprintf "\'%s\'") children
-          | Out_json -> Util.json_of_list children)
+          | Out_plain -> Vyos1x.Util.string_of_list @@ List.map (Printf.sprintf "\'%s\'") children
+          | Out_json -> Vyos1x.Util.json_of_list children)
          in {response_tmpl with output=(Some children_str)}
     with Session.Session_error msg -> {response_tmpl with status=Fail; error=(Some msg)}
 
@@ -138,7 +138,7 @@ let show_config world token (req: request_show_config) =
 
 let validate world token (req: request_validate) =
     try
-        let () = (Lwt_log.debug @@ Printf.sprintf "[%s]\n" (Util.string_of_list req.path)) |> Lwt.ignore_result in
+        let () = (Lwt_log.debug @@ Printf.sprintf "[%s]\n" (Vyos1x.Util.string_of_list req.path)) |> Lwt.ignore_result in
         let _, value = Session.validate world (find_session token) req.path in
         let value = Option.value value ~default:"" in
         let fmt = Option.value req.output_format ~default:Out_plain in
