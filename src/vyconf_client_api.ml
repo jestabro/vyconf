@@ -63,3 +63,6 @@ let session_free token =
 
 let session_validate_path token path =
     call_op (Some token) (Some OpValidate) path
+
+let session_show_config token path =
+    call_op (Some token) (Some OpShowConfig) path
