@@ -45,16 +45,17 @@ let call_op ?(out_format="plain") ?(config_format="curly") token op path =
             | OpShowConfig -> Vyconf_client.show_config client path
             | OpValidate -> Vyconf_client.validate client path
             end
-        in match result with
-        | Ok s ->
-            let%lwt () = Lwt_io.write Lwt_io.stdout s in Lwt.return 0
-        | Error e ->
-            let%lwt () = Lwt_io.write Lwt_io.stderr (Printf.sprintf "%s\n" e) in Lwt.return 1
+        in
+        match result with
+        | Ok s ->  Printf.sprintf "%s\n" s |> Lwt.return
+(*            let%lwt () = Lwt_io.write Lwt_io.stdout s in Lwt.return 0*)
+        | Error e -> Printf.sprintf "%s\n" e |> Lwt.return
+(*            let%lwt () = Lwt_io.write Lwt_io.stderr (Printf.sprintf "%s\n" e) in Lwt.return 1*)
     in
-    let result = Lwt_main.run run in exit result
+    Lwt_main.run run
 
 
-let session_init ?(out_format="plain") ?(config_format="curly") =
+let session_init ?(out_format="plain") ?(config_format="curly") () =
     call_op ~out_format:out_format ~config_format:config_format None (Some OpSetupSession) []
 
 let session_free token =
