@@ -66,10 +66,11 @@ let setup_session ?(on_behalf_of=None) client client_app =
     | _ -> Error (Option.value resp.error ~default:"Unknown error") |> Lwt.return
 
 let teardown_session client =
-    let req = Teardown_session in
+    let req = Teardown in
     let%lwt resp = do_request client req in
     match resp.status with
     | Success -> Ok "" |> Lwt.return
+    | Fail -> Error (Option.value resp.error ~default:"") |> Lwt.return
     | _ -> Error (Option.value resp.error ~default:"") |> Lwt.return
 
 let exists client path =

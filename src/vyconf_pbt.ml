@@ -15,6 +15,8 @@ type request_setup_session = {
   on_behalf_of : int32 option;
 }
 
+type request_teardown = unit
+
 type request_validate = {
   path : string list;
   output_format : request_output_format option;
@@ -131,7 +133,7 @@ type request =
   | Configure of request_enter_configuration_mode
   | Exit_configure
   | Validate of request_validate
-  | Teardown of string
+  | Teardown
 
 type request_envelope = {
   token : string option;
@@ -169,6 +171,8 @@ let rec default_request_setup_session
   client_application;
   on_behalf_of;
 }
+
+let rec default_request_teardown = ()
 
 let rec default_request_validate 
   ?path:((path:string list) = [])
@@ -583,6 +587,12 @@ let rec pp_request_setup_session fmt (v:request_setup_session) =
   in
   Pbrt.Pp.pp_brk pp_i fmt ()
 
+let rec pp_request_teardown fmt (v:request_teardown) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_unit fmt ()
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
 let rec pp_request_validate fmt (v:request_validate) = 
   let pp_i fmt () =
     Pbrt.Pp.pp_record_field ~first:true "path" (Pbrt.Pp.pp_list Pbrt.Pp.pp_string) fmt v.path;
@@ -744,7 +754,7 @@ let rec pp_request fmt (v:request) =
   | Configure x -> Format.fprintf fmt "@[<hv2>Configure(@,%a)@]" pp_request_enter_configuration_mode x
   | Exit_configure  -> Format.fprintf fmt "Exit_configure"
   | Validate x -> Format.fprintf fmt "@[<hv2>Validate(@,%a)@]" pp_request_validate x
-  | Teardown x -> Format.fprintf fmt "@[<hv2>Teardown(@,%a)@]" Pbrt.Pp.pp_string x
+  | Teardown  -> Format.fprintf fmt "Teardown"
 
 let rec pp_request_envelope fmt (v:request_envelope) = 
   let pp_i fmt () =
@@ -805,6 +815,9 @@ let rec encode_pb_request_setup_session (v:request_setup_session) encoder =
   | None -> ();
   end;
   ()
+
+let rec encode_pb_request_teardown (v:request_teardown) encoder = 
+()
 
 let rec encode_pb_request_validate (v:request_validate) encoder = 
   Pbrt.List_util.rev_iter_with (fun x encoder -> 
@@ -1079,9 +1092,9 @@ let rec encode_pb_request (v:request) encoder =
   | Validate x ->
     Pbrt.Encoder.nested encode_pb_request_validate x encoder;
     Pbrt.Encoder.key 21 Pbrt.Bytes encoder; 
-  | Teardown x ->
-    Pbrt.Encoder.string x encoder;
+  | Teardown ->
     Pbrt.Encoder.key 22 Pbrt.Bytes encoder; 
+    Pbrt.Encoder.empty_nested encoder
   end
 
 let rec encode_pb_request_envelope (v:request_envelope) encoder = 
@@ -1175,6 +1188,12 @@ let rec decode_pb_request_setup_session d =
     client_application = v.client_application;
     on_behalf_of = v.on_behalf_of;
   } : request_setup_session)
+
+let rec decode_pb_request_teardown d =
+  match Pbrt.Decoder.key d with
+  | None -> ();
+  | Some (_, pk) -> 
+    Pbrt.Decoder.unexpected_payload "Unexpected fields in empty message(request_teardown)" pk
 
 let rec decode_pb_request_validate d =
   let v = default_request_validate_mutable () in
@@ -1688,7 +1707,10 @@ let rec decode_pb_request d =
         (Exit_configure : request)
       end
       | Some (21, _) -> (Validate (decode_pb_request_validate (Pbrt.Decoder.nested d)) : request) 
-      | Some (22, _) -> (Teardown (Pbrt.Decoder.string d) : request) 
+      | Some (22, _) -> begin 
+        Pbrt.Decoder.empty_nested d ;
+        (Teardown : request)
+      end
       | Some (n, payload_kind) -> (
         Pbrt.Decoder.skip d payload_kind; 
         loop () 
