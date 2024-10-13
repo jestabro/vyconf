@@ -65,6 +65,13 @@ let setup_session ?(on_behalf_of=None) client client_app =
          | None -> Error "setup_session did not return a session token!") |> Lwt.return
     | _ -> Error (Option.value resp.error ~default:"Unknown error") |> Lwt.return
 
+let teardown_session client =
+    let req = Teardown_session in
+    let%lwt resp = do_request client req in
+    match resp.status with
+    | Success -> Ok "" |> Lwt.return
+    | _ -> Error (Option.value resp.error ~default:"") |> Lwt.return
+
 let exists client path =
     let req = Exists {path=path} in
     let%lwt resp = do_request client req in
