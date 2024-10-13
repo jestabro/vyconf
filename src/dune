@@ -33,6 +33,13 @@
  (libraries client)
  (preprocess (pps lwt_ppx)))
 
+(executable
+ (name validate)
+ (public_name validate)
+ (modules validate)
+ (libraries client)
+ (preprocess (pps lwt_ppx)))
+
 (rule
  (alias protoc)
  (mode promote)
