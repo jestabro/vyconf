@@ -2,6 +2,7 @@ open Vyconf_connect.Vyconf_pbt
 
 type op_t =
     | OpSetupSession
+    | OpExists
     | OpTeardownSession
     | OpShowConfig
     | OpValidate
@@ -41,6 +42,7 @@ let call_op ?(out_format="plain") ?(config_format="curly") token op path =
                     | Ok c -> Vyconf_client.get_token c
                     | Error e -> Error e |> Lwt.return
                 end
+            | OpExists -> Vyconf_client.exists client path
             | OpTeardownSession -> Vyconf_client.teardown_session client
             | OpShowConfig -> Vyconf_client.show_config client path
             | OpValidate -> Vyconf_client.validate client path
@@ -66,3 +68,6 @@ let session_validate_path token path =
 
 let session_show_config token path =
     call_op (Some token) (Some OpShowConfig) path
+
+let session_path_exists token path =
+    call_op (Some token) (Some OpExists) path
