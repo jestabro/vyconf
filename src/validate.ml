@@ -21,8 +21,11 @@ let main socket path_list =
         in
         match out with
         | Error e -> Lwt.return ("Failed to validate path: " ^ e)
-        | Ok out ->
-            Lwt.return out
+        | Ok _ ->
+            let%lwt out = session_show_config socket token [] in
+            match out with
+            | Error e -> Lwt.return ("Failed to show config: " ^ e)
+            | Ok out -> Lwt.return out
 (*        Lwt.return (Printf.sprintf "Session token: %s" token) *)
 (*
     let* out = session_validate_path socket token path_list in
