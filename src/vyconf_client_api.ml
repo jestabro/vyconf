@@ -44,10 +44,12 @@ let call_op ?(out_format="plain") ?(config_format="curly") socket token op path 
             | OpValidate -> Vyconf_client.validate client path
             end
         in
+        Lwt.return result
+(*
         match result with
-        | Ok s ->  Printf.sprintf "%s\n" s |> Lwt.return
+        | Ok s ->  Printf.sprintf "%s\n" s |> Lwt.return *)
 (*            let%lwt () = Lwt_io.write Lwt_io.stdout s in Lwt.return 0*)
-        | Error e -> Printf.sprintf "%s\n" e |> Lwt.return
+(*        | Error e -> Printf.sprintf "%s\n" e |> Lwt.return *)
 (*            let%lwt () = Lwt_io.write Lwt_io.stderr (Printf.sprintf "%s\n" e) in Lwt.return 1*)
 (*    in
     Lwt_main.run run*)
