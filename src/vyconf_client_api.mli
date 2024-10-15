@@ -5,12 +5,12 @@ type op_t =
     | OpShowConfig
     | OpValidate
 
-val session_init : ?out_format:string -> ?config_format:string -> unit -> string
+val session_init : ?out_format:string -> ?config_format:string -> string -> string Lwt.t
 
-val session_free : string -> string
+val session_free : string -> string -> string Lwt.t
 
-val session_validate_path : string -> string list -> string
+val session_validate_path : string -> string -> string list -> string Lwt.t
 
-val session_show_config : string -> string list -> string
+val session_show_config : string -> string -> string list -> string Lwt.t
 
-val session_path_exists : string -> string list -> string
+val session_path_exists : string -> string -> string list -> string Lwt.t

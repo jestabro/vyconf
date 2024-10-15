@@ -7,9 +7,6 @@ type op_t =
     | OpShowConfig
     | OpValidate
 
-let get_sockname =
-    "/var/run/vyconfd.sock"
-
 let config_format_of_string s =
     match s with
     | "curly" -> Curly
@@ -22,11 +19,10 @@ let output_format_of_string s =
     | "json" ->	Out_json
     | _	-> failwith (Printf.sprintf "Unknown output format %s, should be plain or json" s)
 
-let call_op ?(out_format="plain") ?(config_format="curly") token op path =
-    let socket = get_sockname in
+let call_op ?(out_format="plain") ?(config_format="curly") socket token op path =
     let config_format = config_format_of_string config_format in
     let out_format = output_format_of_string out_format in
-    let run =
+(*    let run =*)
         let%lwt client =
             Vyconf_client.create ~token:token socket out_format config_format
         in
@@ -53,21 +49,21 @@ let call_op ?(out_format="plain") ?(config_format="curly") token op path =
 (*            let%lwt () = Lwt_io.write Lwt_io.stdout s in Lwt.return 0*)
         | Error e -> Printf.sprintf "%s\n" e |> Lwt.return
 (*            let%lwt () = Lwt_io.write Lwt_io.stderr (Printf.sprintf "%s\n" e) in Lwt.return 1*)
-    in
-    Lwt_main.run run
+(*    in
+    Lwt_main.run run*)
 
 
-let session_init ?(out_format="plain") ?(config_format="curly") () =
-    call_op ~out_format:out_format ~config_format:config_format None (Some OpSetupSession) []
+let session_init ?(out_format="plain") ?(config_format="curly") socket =
+    call_op ~out_format:out_format ~config_format:config_format socket None (Some OpSetupSession) []
 
-let session_free token =
-    call_op (Some token) (Some OpTeardownSession) []
+let session_free socket token =
+    call_op socket (Some token) (Some OpTeardownSession) []
 
-let session_validate_path token path =
-    call_op (Some token) (Some OpValidate) path
+let session_validate_path socket token path =
+    call_op socket (Some token) (Some OpValidate) path
 
-let session_show_config token path =
-    call_op (Some token) (Some OpShowConfig) path
+let session_show_config socket token path =
+    call_op socket (Some token) (Some OpShowConfig) path
 
-let session_path_exists token path =
-    call_op (Some token) (Some OpExists) path
+let session_path_exists socket token path =
+    call_op socket (Some token) (Some OpExists) path
