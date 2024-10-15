@@ -12,12 +12,18 @@ let args = [
 let get_sockname =
     "/var/run/vyconfd.sock"
 
-let main socket _path_list =
+let main socket path_list =
     let%lwt token = session_init socket in
     match token with
     | Error e -> Lwt.return ("Failed to initialize session: " ^ e)
     | Ok token ->
-        Lwt.return (Printf.sprintf "Session token: %s" token)
+        let%lwt out = session_validate_path socket token path_list
+        in
+        match out with
+        | Error e -> Lwt.return ("Failed to validate path: " ^ e)
+        | Ok out ->
+            Lwt.return out
+(*        Lwt.return (Printf.sprintf "Session token: %s" token) *)
 (*
     let* out = session_validate_path socket token path_list in
     Lwt.return out
