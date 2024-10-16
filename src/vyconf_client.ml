@@ -65,8 +65,9 @@ let setup_session ?(on_behalf_of=None) client client_app =
          | None -> Error "setup_session did not return a session token!") |> Lwt.return
     | _ -> Error (Option.value resp.error ~default:"Unknown error") |> Lwt.return
 
-let teardown_session client =
-    let req = Teardown in
+let teardown_session ?(on_behalf_of=None) client =
+    let id = on_behalf_of |> (function None -> None | Some x -> (Some (Int32.of_int x))) in
+    let req = Teardown {on_behalf_of=id} in
     let%lwt resp = do_request client req in
     match resp.status with
     | Success -> Ok "" |> Lwt.return

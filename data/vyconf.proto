@@ -18,6 +18,7 @@ message Request {
   }
 
   message Teardown {
+    optional int32 OnBehalfOf = 1;
   }
 
   message Validate {

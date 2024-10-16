@@ -22,7 +22,9 @@ type request_setup_session = {
   on_behalf_of : int32 option;
 }
 
-type request_teardown = unit
+type request_teardown = {
+  on_behalf_of : int32 option;
+}
 
 type request_validate = {
   path : string list;
@@ -140,7 +142,7 @@ type request =
   | Configure of request_enter_configuration_mode
   | Exit_configure
   | Validate of request_validate
-  | Teardown
+  | Teardown of request_teardown
 
 type request_envelope = {
   token : string option;
@@ -184,7 +186,10 @@ val default_request_setup_session :
   request_setup_session
 (** [default_request_setup_session ()] is the default value for type [request_setup_session] *)
 
-val default_request_teardown : unit
+val default_request_teardown : 
+  ?on_behalf_of:int32 option ->
+  unit ->
+  request_teardown
 (** [default_request_teardown ()] is the default value for type [request_teardown] *)
 
 val default_request_validate : 
