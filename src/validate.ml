@@ -18,16 +18,16 @@ let wrap o =
     | Error _ -> None
 
 let main socket path_list =
-    let%lwt token = session_init socket in
+    let token = session_init socket in
     match token with
-    | Error e -> Lwt.return ("Failed to initialize session: " ^ e)
+    | Error e -> "Failed to initialize session: " ^ e
     | Ok token ->
-        let%lwt out = session_validate_path socket token path_list
+        let out = session_validate_path socket token path_list
         in
-        let%lwt _ = session_free socket token in
+        let _ = session_free socket token in
         match out with
-        | Error e -> Lwt.return ("Failed to validate path: " ^ e)
-        | Ok _ -> Lwt.return ("Appeared to work")
+        | Error e -> "Failed to validate path: " ^ e
+        | Ok _ -> "Appeared to work"
     (*
     let%lwt token = session_init socket in
     let token = wrap token in
@@ -52,6 +52,6 @@ let _ =
     let () = Arg.parse args (fun _ -> ()) usage in
     let path_list = Vyos1x.Util.list_of_path !path_opt in
     let socket = get_sockname in
-    let result = Lwt_main.run (main socket path_list) in
+    let result = main socket path_list in
     let () = print_endline result in
     exit 0

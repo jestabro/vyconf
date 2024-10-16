@@ -22,7 +22,7 @@ let output_format_of_string s =
 let call_op ?(out_format="plain") ?(config_format="curly") socket token op path =
     let config_format = config_format_of_string config_format in
     let out_format = output_format_of_string out_format in
-(*    let run =*)
+    let run =
         let%lwt client =
             Vyconf_client.create ~token:token socket out_format config_format
         in
@@ -45,6 +45,8 @@ let call_op ?(out_format="plain") ?(config_format="curly") socket token op path 
             end
         in
         Lwt.return result
+    in
+    Lwt_main.run run
 (*
         match result with
         | Ok s ->  Printf.sprintf "%s\n" s |> Lwt.return *)
