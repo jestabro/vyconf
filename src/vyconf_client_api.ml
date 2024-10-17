@@ -47,15 +47,6 @@ let call_op ?(out_format="plain") ?(config_format="curly") socket token op path 
         Lwt.return result
     in
     Lwt_main.run run
-(*
-        match result with
-        | Ok s ->  Printf.sprintf "%s\n" s |> Lwt.return *)
-(*            let%lwt () = Lwt_io.write Lwt_io.stdout s in Lwt.return 0*)
-(*        | Error e -> Printf.sprintf "%s\n" e |> Lwt.return *)
-(*            let%lwt () = Lwt_io.write Lwt_io.stderr (Printf.sprintf "%s\n" e) in Lwt.return 1*)
-(*    in
-    Lwt_main.run run*)
-
 
 let session_init ?(out_format="plain") ?(config_format="curly") socket =
     call_op ~out_format:out_format ~config_format:config_format socket None (Some OpSetupSession) []

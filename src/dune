@@ -37,8 +37,7 @@
  (name validate)
  (public_name validate)
  (modules validate)
- (libraries client)
- (preprocess (pps lwt_ppx)))
+ (libraries client))
 
 (rule
  (alias protoc)
