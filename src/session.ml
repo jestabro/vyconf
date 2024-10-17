@@ -65,11 +65,11 @@ let rec apply_changes changeset config =
     | c :: cs -> apply_changes cs (apply_cfg_op c config)
 
 let validate w _s path =
-    let path, value =
+    let out =
     try
         RT.validate_path D.(w.dirs.validators) w.reference_tree path
     with RT.Validation_error x -> raise (Session_error x)
-    in (path, value)
+    in out
 
 let set w s path =
     let path, value = validate w s path in
