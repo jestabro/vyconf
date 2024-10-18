@@ -140,7 +140,7 @@ let validate world token (req: request_validate) =
     try
         let () = (Lwt_log.debug @@ Printf.sprintf "[%s]\n" (Vyos1x.Util.string_of_list req.path)) |> Lwt.ignore_result in
         let out = Session.validate world (find_session token) req.path in
-        in {response_tmpl with output=(Some out)}
+        {response_tmpl with output=(Some out)}
     with Session.Session_error msg -> {response_tmpl with status=Fail; error=(Some msg)}
 
 let send_response oc resp =

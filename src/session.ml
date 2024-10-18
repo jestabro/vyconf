@@ -71,8 +71,12 @@ let validate w _s path =
     with RT.Validation_error x -> raise (Session_error x)
     in out
 
+let split_path w _s path =
+    RT.split_path w.reference_tree path
+
 let set w s path =
-    let path, value = validate w s path in
+    let _ = validate w s path in
+    let path, value = split_path w s path in
     let refpath = RT.refpath w.reference_tree path in
     let value_behaviour = if RT.is_multi w.reference_tree refpath then CT.AddValue else CT.ReplaceValue in
     let op = CfgSet (path, value, value_behaviour) in
@@ -80,7 +84,8 @@ let set w s path =
     {s with proposed_config=config; changeset=(op :: s.changeset)}
 
 let delete w s path =
-    let path, value = validate w s path in
+    let _ = validate w s path in
+    let path, value = split_path w s path in
     let op = CfgDelete (path, value) in
     let config = apply_cfg_op op s.proposed_config in
     {s with proposed_config=config; changeset=(op :: s.changeset)}
