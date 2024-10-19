@@ -139,8 +139,8 @@ let show_config world token (req: request_show_config) =
 let validate world token (req: request_validate) =
     try
         let () = (Lwt_log.debug @@ Printf.sprintf "[%s]\n" (Vyos1x.Util.string_of_list req.path)) |> Lwt.ignore_result in
-        let out = Session.validate world (find_session token) req.path in
-        {response_tmpl with output=(Some out)}
+        let () = Session.validate world (find_session token) req.path in
+        response_tmpl
     with Session.Session_error msg -> {response_tmpl with status=Fail; error=(Some msg)}
 
 let send_response oc resp =
