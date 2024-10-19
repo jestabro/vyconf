@@ -24,7 +24,11 @@ let test_load_valid_definition test_ctxt =
 let test_validate_path_leaf_valid test_ctxt =
     let r = VT.make RT.default_data "root" in
     let r = RT.load_from_xml r (in_testdata_dir test_ctxt ["interface_definition_sample.xml"]) in
-    assert_equal (RT.validate_path (get_dir test_ctxt) r ["system"; "host-name"; "test"]) (["system"; "host-name"], Some "test")
+    let test p =
+        let _ = RT.validate_path (get_dir test_ctxt) r p in
+        RT.split_path r p
+    in
+    assert_equal (test ["system"; "host-name"; "test"]) (["system"; "host-name"], Some "test")
 
 let test_validate_path_leaf_invalid test_ctxt =
     let r = VT.make RT.default_data "root" in
@@ -39,7 +43,11 @@ let test_validate_path_leaf_incomplete test_ctxt =
 let test_validate_path_tag_node_complete_valid test_ctxt =
     let r = VT.make RT.default_data "root" in
     let r = RT.load_from_xml r (in_testdata_dir test_ctxt ["interface_definition_sample.xml"]) in
-    assert_equal (RT.validate_path (get_dir test_ctxt) r ["system"; "login"; "user"; "test"; "full-name"; "test user"])
+    let test p =
+        let _ = RT.validate_path (get_dir test_ctxt) r p in
+        RT.split_path r p
+    in
+    assert_equal (test ["system"; "login"; "user"; "test"; "full-name"; "test user"])
                  (["system"; "login"; "user"; "test"; "full-name";], Some "test user")
 
 let test_validate_path_tag_node_illegal_characters test_ctxt =
@@ -72,7 +80,11 @@ let test_validate_path_valueless_node_with_value test_ctxt =
 let test_validate_path_valueless_node_valid test_ctxt =
     let r = VT.make RT.default_data "root" in
     let r = RT.load_from_xml r (in_testdata_dir test_ctxt ["interface_definition_sample.xml"]) in
-    assert_equal (RT.validate_path (get_dir test_ctxt) r ["system"; "options"; "reboot-on-panic"])
+    let test p =
+        let _ = RT.validate_path (get_dir test_ctxt) r p in
+        RT.split_path r p
+    in
+    assert_equal (test ["system"; "options"; "reboot-on-panic"])
                  (["system"; "options"; "reboot-on-panic"], None)
 
 let test_is_multi_valid test_ctxt =
