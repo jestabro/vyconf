@@ -139,14 +139,8 @@ let show_config world token (req: request_show_config) =
 let validate world token (req: request_validate) =
     try
         let () = (Lwt_log.debug @@ Printf.sprintf "[%s]\n" (Vyos1x.Util.string_of_list req.path)) |> Lwt.ignore_result in
-        let _, value = Session.validate world (find_session token) req.path in
-        let value = Option.value value ~default:"" in
-        let fmt = Option.value req.output_format ~default:Out_plain in
-        let value_str =
-         (match fmt with
-          | Out_plain -> value
-          | Out_json -> Yojson.Safe.to_string @@ `String value)
-        in {response_tmpl with output=(Some value_str)}
+        let out = Session.validate world (find_session token) req.path in
+        {response_tmpl with output=(Some out)}
     with Session.Session_error msg -> {response_tmpl with status=Fail; error=(Some msg)}
 
 let send_response oc resp =
