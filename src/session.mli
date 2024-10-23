@@ -26,7 +26,7 @@ val set_modified : session_data -> session_data
 
 val apply_changes : cfg_op list -> Vyos1x.Config_tree.t -> Vyos1x.Config_tree.t
 
-val validate : world -> session_data -> string list -> string list * string option
+val validate : world -> session_data -> string list -> unit
 
 val set : world -> session_data -> string list -> session_data
 

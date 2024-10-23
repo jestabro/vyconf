@@ -114,5 +114,6 @@ let validate client path =
     let req = Validate {path=path; output_format=(Some client.out_format)} in
     let%lwt resp = do_request client req in
     match resp.status with
-    | Success -> unwrap resp.output |> Lwt.return
+    | Success -> Lwt.return (Ok "")
+    | Fail -> Error (Option.value resp.error ~default:"") |> Lwt.return
     | _ -> Error (Option.value resp.error ~default:"") |> Lwt.return

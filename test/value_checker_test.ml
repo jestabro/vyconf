@@ -38,15 +38,15 @@ let test_check_external_bad_validator test_ctxt =
 
 let test_validate_any_valid test_ctxt =
     let cs = [VC.Regex "\\d+"; VC.Regex "[a-z]+"; VC.External ("anything", None)] in
-    assert_equal (fst (VC.validate_any (get_dir test_ctxt) cs "AAAA")) true
+    assert_equal (VC.validate_any (get_dir test_ctxt) cs "AAAA") None
 
 let test_validate_any_invalid test_ctxt =
     let cs = [VC.Regex "\\d+"; VC.Regex "[a-z]+"] in
-    assert_equal (fst (VC.validate_any (get_dir test_ctxt) cs "AAAA")) false
+    assert_equal (VC.validate_any (get_dir test_ctxt) cs "AAAA") None
 
 let test_validate_any_no_constraints test_ctxt =
     let cs = [] in
-    assert_equal (fst (VC.validate_any (get_dir test_ctxt) cs "foo")) true
+    assert_equal (VC.validate_any (get_dir test_ctxt) cs "foo") None
 
 let suite =
     "VyConf value checker tests" >::: [
