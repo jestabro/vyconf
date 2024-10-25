@@ -63,10 +63,15 @@ let () =
             | None -> "missing session handle"
         else ""
     in
+    let ret =
+        if (is_valid valid) && (res = "") then 0
+        else 1
+    in
     let output = format_out [(valid_err valid); res] in
     let () =
         match handle with
         | Some h -> Vyos1x_adapter.cstore_handle_free h
         | None -> ()
     in
-    print_endline output
+    let () = print_endline output in
+    exit ret
