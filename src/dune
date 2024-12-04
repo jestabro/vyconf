@@ -42,7 +42,6 @@
  (libraries client))
 
 (rule
- (alias protoc)
  (mode promote)
  (targets vyconf_pbt.ml vyconf_pbt.mli)
  (action
@@ -52,6 +51,17 @@
     (run ocaml-protoc --ml_out src data/vyconf.proto)
     (run mv src/vyconf.ml src/vyconf_pbt.ml)
     (run mv src/vyconf.mli src/vyconf_pbt.mli)))))
+
+(rule
+ (mode promote)
+ (targets configd_pbt.ml configd_pbt.mli)
+ (action
+  (chdir
+   %{project_root}
+   (progn
+    (run ocaml-protoc --ml_out src data/configd.proto)
+    (run mv src/configd.ml src/configd_pbt.ml)
+    (run mv src/configd.mli src/configd_pbt.mli)))))
 
 (library
  (name vyos1x_adapter)

@@ -1,0 +1,43 @@
+message Dispatch {
+    message Initialization {
+        required int32 pid = 1;
+        required string config_active = 2;
+        required string config_proposed = 3;
+    }
+    message Call {
+        required string script = 1;
+        optional string tag_value = 2;
+        optional string arg = 3;
+    }
+
+    oneof dispatch {
+        Initialization initialization = 1;
+        Call call = 2;
+    }
+}
+
+message DispatchEnvelope {
+    required Dispatch dispatch = 1;
+}
+
+enum Error {
+  SUCCESS = 0;
+  CONFIG_ERROR = 1;
+  DAEMON_ERROR = 2;
+  PASS_THROUGH = 3;
+}
+
+message command {
+  repeated string node = 1;
+}
+
+message commands {
+  repeated command cmd = 1;
+}
+
+message Result {
+    required Error error = 1;
+    required string output = 2;
+    optional commands set = 3;
+    optional commands delete = 4;
+}
