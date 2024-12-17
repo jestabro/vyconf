@@ -42,6 +42,12 @@
  (modules validate)
  (libraries client))
 
+(executable
+ (name test_commit_data)
+ (public_name test-commit-data)
+ (modules test_commit_data)
+ (libraries vyos1x-config vyconfd_config))
+
 (rule
  (mode promote)
  (targets vyconf_pbt.ml vyconf_pbt.mli)
