@@ -30,7 +30,7 @@ let lex_order c1 c2 =
         | _ ->
             match c1.script, c2.script with
             | Some s1, Some s2 ->
-                compare (FilePath.basename s1) (FilePath.basename s2)
+                compare s1 s2
             | _ -> 0
 
 module CI = struct
