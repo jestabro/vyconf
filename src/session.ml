@@ -134,3 +134,16 @@ let show_config _w s path fmt =
                 (match path with [] -> s.proposed_config |
                                  _ as ps -> VT.get s.proposed_config ps) in
             CT.to_yojson node |> Yojson.Safe.pretty_to_string
+
+let show_reftree w _s path =
+    if (path <> []) && not (VT.exists w.reference_tree path) then
+        raise (Session_error ("Path does not exist"))
+    else
+        let node =
+            (match path with [] -> w.reference_tree |
+                             _ as ps -> VT.get w.reference_tree ps) in
+        let out = RT.render_json node in
+        out
+(*        let oc = open_out "/home/vyos/wtf" in
+        Printf.fprintf oc "%s" out; close_out oc;
+        "This is some string\n" *)

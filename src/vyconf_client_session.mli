@@ -3,6 +3,7 @@ type op_t =
     | OpExists
     | OpTeardownSession
     | OpShowConfig
+    | OpShowReftree
     | OpValidate
     | OpReloadReftree
 
@@ -13,6 +14,8 @@ val session_free : string -> string -> (string, string) result
 val session_validate_path : string -> string -> string list -> (string, string) result
 
 val session_show_config : string -> string -> string list -> (string, string) result
+
+val session_show_reftree : string -> string -> string list -> (string, string) result
 
 val session_path_exists : string -> string -> string list -> (string, string) result
 

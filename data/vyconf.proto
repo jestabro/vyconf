@@ -82,6 +82,10 @@ message Request {
     optional ConfigFormat format = 2;
   }
 
+  message ShowReftree {
+    repeated string Path = 1;
+  }
+
   message Exists {
     repeated string Path = 1;
   }
@@ -145,6 +149,7 @@ message Request {
     Validate validate = 21;
     Teardown teardown = 22;
     ReloadReftree reload_reftree = 23;
+    ShowReftree show_reftree = 24;
   }
 }
 

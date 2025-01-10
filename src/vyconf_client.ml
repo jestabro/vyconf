@@ -110,6 +110,13 @@ let show_config client path =
     | Success -> unwrap resp.output |> Lwt.return
     | _ -> Error (Option.value resp.error ~default:"") |> Lwt.return
 
+let show_reftree client path =
+    let req = Show_reftree {path=path} in
+    let%lwt resp = do_request client req in
+    match resp.status with
+    | Success -> unwrap resp.output |> Lwt.return
+    | _ -> Error (Option.value resp.error ~default:"") |> Lwt.return
+
 let validate client path =
     let req = Validate {path=path; output_format=(Some client.out_format)} in
     let%lwt resp = do_request client req in

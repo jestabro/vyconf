@@ -41,6 +41,8 @@ val list_children : t -> string list -> (string, string) result Lwt.t
 
 val show_config : t -> string list -> (string, string) result Lwt.t
 
+val show_reftree : t -> string list -> (string, string) result Lwt.t
+
 val validate : t -> string list -> (string, string) result Lwt.t
 
 val reload_reftree : t -> (string, string) result Lwt.t

@@ -87,6 +87,10 @@ type request_show_config = {
   format : request_config_format option;
 }
 
+type request_show_reftree = {
+  path : string list;
+}
+
 type request_exists = {
   path : string list;
 }
@@ -146,6 +150,7 @@ type request =
   | Validate of request_validate
   | Teardown of request_teardown
   | Reload_reftree
+  | Show_reftree of request_show_reftree
 
 type request_envelope = {
   token : string option;
@@ -280,6 +285,12 @@ val default_request_show_config :
   request_show_config
 (** [default_request_show_config ()] is the default value for type [request_show_config] *)
 
+val default_request_show_reftree : 
+  ?path:string list ->
+  unit ->
+  request_show_reftree
+(** [default_request_show_reftree ()] is the default value for type [request_show_reftree] *)
+
 val default_request_exists : 
   ?path:string list ->
   unit ->
@@ -406,6 +417,9 @@ val pp_request_save : Format.formatter -> request_save -> unit
 val pp_request_show_config : Format.formatter -> request_show_config -> unit 
 (** [pp_request_show_config v] formats v *)
 
+val pp_request_show_reftree : Format.formatter -> request_show_reftree -> unit 
+(** [pp_request_show_reftree v] formats v *)
+
 val pp_request_exists : Format.formatter -> request_exists -> unit 
 (** [pp_request_exists v] formats v *)
 
@@ -499,6 +513,9 @@ val encode_pb_request_save : request_save -> Pbrt.Encoder.t -> unit
 val encode_pb_request_show_config : request_show_config -> Pbrt.Encoder.t -> unit
 (** [encode_pb_request_show_config v encoder] encodes [v] with the given [encoder] *)
 
+val encode_pb_request_show_reftree : request_show_reftree -> Pbrt.Encoder.t -> unit
+(** [encode_pb_request_show_reftree v encoder] encodes [v] with the given [encoder] *)
+
 val encode_pb_request_exists : request_exists -> Pbrt.Encoder.t -> unit
 (** [encode_pb_request_exists v encoder] encodes [v] with the given [encoder] *)
 
@@ -591,6 +608,9 @@ val decode_pb_request_save : Pbrt.Decoder.t -> request_save
 
 val decode_pb_request_show_config : Pbrt.Decoder.t -> request_show_config
 (** [decode_pb_request_show_config decoder] decodes a [request_show_config] binary value from [decoder] *)
+
+val decode_pb_request_show_reftree : Pbrt.Decoder.t -> request_show_reftree
+(** [decode_pb_request_show_reftree decoder] decodes a [request_show_reftree] binary value from [decoder] *)
 
 val decode_pb_request_exists : Pbrt.Decoder.t -> request_exists
 (** [decode_pb_request_exists decoder] decodes a [request_exists] binary value from [decoder] *)

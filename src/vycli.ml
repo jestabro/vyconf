@@ -6,6 +6,7 @@ type op_t =
     | OpSetupSession
     | OpTeardownSession
     | OpShowConfig
+    | OpShowReftree
     | OpExists
     | OpGetValue
     | OpGetValues
@@ -35,6 +36,7 @@ let args = [
     ("--exists", Arg.Unit (fun () -> op := Some OpExists), "Check if specified path exists");
     ("--list-children", Arg.Unit (fun () -> op := Some OpListChildren), "List children of the node at the specified path");
     ("--show-config", Arg.Unit (fun () -> op := Some OpShowConfig), "Show the configuration at the specified path");
+    ("--show-reftree", Arg.Unit (fun () -> op := Some OpShowReftree), "Show the reference tree at the specified path");
     ("--status", Arg.Unit (fun () -> op := Some OpStatus), "Send a status/keepalive message");
     ("--validate", Arg.Unit (fun () -> op := Some OpValidate), "Validate path");
     ("--reload-reftree", Arg.Unit (fun () -> op := Some OpReloadReftree), "Reload reference tree");
@@ -78,6 +80,7 @@ let main socket op path out_format config_format =
             | OpGetValues -> get_values client path
             | OpListChildren -> list_children client path
             | OpShowConfig -> show_config client path
+            | OpShowReftree -> show_reftree client path
             | OpValidate -> validate client path
             | OpReloadReftree -> reload_reftree client
             | _ -> Error "Unimplemented" |> Lwt.return
