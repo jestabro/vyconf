@@ -5,6 +5,7 @@ type op_t =
     | OpExists
     | OpTeardownSession
     | OpShowConfig
+    | OpShowReftree
     | OpValidate
     | OpReloadReftree
 
@@ -42,6 +43,7 @@ let call_op ?(out_format="plain") ?(config_format="curly") socket token op path 
             | OpExists -> Vyconf_client.exists client path
             | OpTeardownSession -> Vyconf_client.teardown_session client
             | OpShowConfig -> Vyconf_client.show_config client path
+            | OpShowReftree -> Vyconf_client.show_reftree client path
             | OpValidate -> Vyconf_client.validate client path
             | OpReloadReftree -> Vyconf_client.reload_reftree client
             end
@@ -61,6 +63,9 @@ let session_validate_path socket token path =
 
 let session_show_config socket token path =
     call_op socket (Some token) (Some OpShowConfig) path
+
+let session_show_reftree socket token path =
+    call_op socket (Some token) (Some OpShowReftree) path
 
 let session_path_exists socket token path =
     call_op socket (Some token) (Some OpExists) path

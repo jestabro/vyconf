@@ -136,6 +136,12 @@ let show_config world token (req: request_show_config) =
         {response_tmpl with output=(Some conf_str)}
     with Session.Session_error msg -> {response_tmpl with status=Fail; error=(Some msg)}
 
+let show_reftree world token (req: request_show_reftree) =
+    try
+        let reft_str = Session.show_reftree world (find_session token) req.path in
+        {response_tmpl with output=(Some reft_str)}
+    with Session.Session_error msg -> {response_tmpl with status=Fail; error=(Some msg)}
+
 let validate world token (req: request_validate) =
     try
         let () = (Lwt_log.debug @@ Printf.sprintf "[%s]\n" (Vyos1x.Util.string_of_list req.path)) |> Lwt.ignore_result in
@@ -188,6 +194,7 @@ let rec handle_connection world ic oc () =
                     | Some t, Get_values r -> get_values world t r
                     | Some t, List_children r -> list_children world t r
                     | Some t, Show_config r -> show_config world t r
+                    | Some t, Show_reftree r -> show_reftree world t r
                     | Some t, Validate r -> validate world t r
                     | _ -> failwith "Unimplemented"
                 end) |> Lwt.return

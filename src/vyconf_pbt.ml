@@ -80,6 +80,10 @@ type request_show_config = {
   format : request_config_format option;
 }
 
+type request_show_reftree = {
+  path : string list;
+}
+
 type request_exists = {
   path : string list;
 }
@@ -141,6 +145,7 @@ type request =
   | Validate of request_validate
   | Teardown of request_teardown
   | Reload_reftree of request_reload_reftree
+  | Show_reftree of request_show_reftree
 
 type request_envelope = {
   token : string option;
@@ -281,6 +286,12 @@ let rec default_request_show_config
   () : request_show_config  = {
   path;
   format;
+}
+
+let rec default_request_show_reftree 
+  ?path:((path:string list) = [])
+  () : request_show_reftree  = {
+  path;
 }
 
 let rec default_request_exists 
@@ -503,6 +514,14 @@ let default_request_show_config_mutable () : request_show_config_mutable = {
   format = None;
 }
 
+type request_show_reftree_mutable = {
+  mutable path : string list;
+}
+
+let default_request_show_reftree_mutable () : request_show_reftree_mutable = {
+  path = [];
+}
+
 type request_exists_mutable = {
   mutable path : string list;
 }
@@ -711,6 +730,12 @@ let rec pp_request_show_config fmt (v:request_show_config) =
   in
   Pbrt.Pp.pp_brk pp_i fmt ()
 
+let rec pp_request_show_reftree fmt (v:request_show_reftree) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "path" (Pbrt.Pp.pp_list Pbrt.Pp.pp_string) fmt v.path;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
 let rec pp_request_exists fmt (v:request_exists) = 
   let pp_i fmt () =
     Pbrt.Pp.pp_record_field ~first:true "path" (Pbrt.Pp.pp_list Pbrt.Pp.pp_string) fmt v.path;
@@ -795,6 +820,7 @@ let rec pp_request fmt (v:request) =
   | Validate x -> Format.fprintf fmt "@[<hv2>Validate(@,%a)@]" pp_request_validate x
   | Teardown x -> Format.fprintf fmt "@[<hv2>Teardown(@,%a)@]" pp_request_teardown x
   | Reload_reftree x -> Format.fprintf fmt "@[<hv2>Reload_reftree(@,%a)@]" pp_request_reload_reftree x
+  | Show_reftree x -> Format.fprintf fmt "@[<hv2>Show_reftree(@,%a)@]" pp_request_show_reftree x
 
 let rec pp_request_envelope fmt (v:request_envelope) = 
   let pp_i fmt () =
@@ -1001,6 +1027,13 @@ let rec encode_pb_request_show_config (v:request_show_config) encoder =
   end;
   ()
 
+let rec encode_pb_request_show_reftree (v:request_show_reftree) encoder = 
+  Pbrt.List_util.rev_iter_with (fun x encoder -> 
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
+  ) v.path encoder;
+  ()
+
 let rec encode_pb_request_exists (v:request_exists) encoder = 
   Pbrt.List_util.rev_iter_with (fun x encoder -> 
     Pbrt.Encoder.string x encoder;
@@ -1153,6 +1186,9 @@ let rec encode_pb_request (v:request) encoder =
   | Reload_reftree x ->
     Pbrt.Encoder.nested encode_pb_request_reload_reftree x encoder;
     Pbrt.Encoder.key 23 Pbrt.Bytes encoder; 
+  | Show_reftree x ->
+    Pbrt.Encoder.nested encode_pb_request_show_reftree x encoder;
+    Pbrt.Encoder.key 24 Pbrt.Bytes encoder; 
   end
 
 let rec encode_pb_request_envelope (v:request_envelope) encoder = 
@@ -1584,6 +1620,25 @@ let rec decode_pb_request_show_config d =
     format = v.format;
   } : request_show_config)
 
+let rec decode_pb_request_show_reftree d =
+  let v = default_request_show_reftree_mutable () in
+  let continue__= ref true in
+  while !continue__ do
+    match Pbrt.Decoder.key d with
+    | None -> (
+      v.path <- List.rev v.path;
+    ); continue__ := false
+    | Some (1, Pbrt.Bytes) -> begin
+      v.path <- (Pbrt.Decoder.string d) :: v.path;
+    end
+    | Some (1, pk) -> 
+      Pbrt.Decoder.unexpected_payload "Message(request_show_reftree), field(1)" pk
+    | Some (_, payload_kind) -> Pbrt.Decoder.skip d payload_kind
+  done;
+  ({
+    path = v.path;
+  } : request_show_reftree)
+
 let rec decode_pb_request_exists d =
   let v = default_request_exists_mutable () in
   let continue__= ref true in
@@ -1797,6 +1852,7 @@ let rec decode_pb_request d =
       | Some (21, _) -> (Validate (decode_pb_request_validate (Pbrt.Decoder.nested d)) : request) 
       | Some (22, _) -> (Teardown (decode_pb_request_teardown (Pbrt.Decoder.nested d)) : request) 
       | Some (23, _) -> (Reload_reftree (decode_pb_request_reload_reftree (Pbrt.Decoder.nested d)) : request) 
+      | Some (24, _) -> (Show_reftree (decode_pb_request_show_reftree (Pbrt.Decoder.nested d)) : request) 
       | Some (n, payload_kind) -> (
         Pbrt.Decoder.skip d payload_kind; 
         loop () 
