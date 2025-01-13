@@ -142,4 +142,8 @@ let show_reftree w _s path =
         let node =
             (match path with [] -> w.reference_tree |
                              _ as ps -> VT.get w.reference_tree ps) in
-        RT.render_json node
+        let out = RT.render_json node in
+        out
+(*        let oc = open_out "/home/vyos/wtf" in
+        Printf.fprintf oc "%s" out; close_out oc;
+        "This is some string\n" *)
