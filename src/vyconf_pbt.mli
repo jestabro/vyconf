@@ -120,9 +120,7 @@ type request_enter_configuration_mode = {
 
 type request_exit_configuration_mode = unit
 
-type request_reload_reftree = {
-  on_behalf_of : int32 option;
-}
+type request_reload_reftree = unit
 
 type request =
   | Status
@@ -147,7 +145,7 @@ type request =
   | Exit_configure
   | Validate of request_validate
   | Teardown of request_teardown
-  | Reload_reftree of request_reload_reftree
+  | Reload_reftree
 
 type request_envelope = {
   token : string option;
@@ -329,10 +327,7 @@ val default_request_enter_configuration_mode :
 val default_request_exit_configuration_mode : unit
 (** [default_request_exit_configuration_mode ()] is the default value for type [request_exit_configuration_mode] *)
 
-val default_request_reload_reftree : 
-  ?on_behalf_of:int32 option ->
-  unit ->
-  request_reload_reftree
+val default_request_reload_reftree : unit
 (** [default_request_reload_reftree ()] is the default value for type [request_reload_reftree] *)
 
 val default_request : unit -> request

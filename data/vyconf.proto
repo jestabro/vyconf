@@ -118,7 +118,6 @@ message Request {
   }
 
   message ReloadReftree {
-    optional int32 OnBehalfOf = 1;
   }
 
 

@@ -143,7 +143,7 @@ let validate world token (req: request_validate) =
         response_tmpl
     with Session.Session_error msg -> {response_tmpl with status=Fail; error=(Some msg)}
 
-let reload_reftree world (_req: request_reload_reftree) =
+let reload_reftree world =
     let config = world.Session.vyconf_config in
     let reftree =
         Startup.read_reference_tree (FP.concat config.reftree_dir config.reference_tree)
@@ -178,7 +178,7 @@ let rec handle_connection world ic oc () =
                     match req with
                     | _, Status -> response_tmpl
                     | _, Setup_session r -> setup_session world r
-                    | _, Reload_reftree r -> reload_reftree world r
+                    | _, Reload_reftree -> reload_reftree world
                     | None, _ -> {response_tmpl with status=Fail; output=(Some "Operation requires session token")}
                     | Some t, Teardown _ -> teardown t
                     | Some t, Configure r -> enter_conf_mode r t
