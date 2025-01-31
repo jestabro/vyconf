@@ -21,7 +21,7 @@ let default_commit_data = {
 }
 
 let lex_order c1 c2 =
-    let c = Vyos1x.Util.colex_order c1.path c2.path in
+    let c = Vyos1x.Util.lex_order c1.path c2.path in
     match c with
     | 0 ->
         begin
@@ -126,3 +126,14 @@ let calculate_priority_lists rt at wt =
     let cs_add' = get_commit_set rt add_tree in
     let cs_del, cs_add = legacy_order del_tree cs_del' cs_add' in
     List.rev (CS.elements cs_del), CS.elements cs_add
+
+let show_commit_data rt at wt =
+    let del_list, add_list =
+        calculate_priority_lists rt at wt
+    in
+    let sprint_commit_data acc s =
+        acc ^ "\n" ^ show_commit_data s
+    in
+    let out' = List.fold_left sprint_commit_data "" del_list in
+    let out = List.fold_left sprint_commit_data out' add_list
+    in print_endline out
