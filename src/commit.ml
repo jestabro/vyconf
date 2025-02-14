@@ -4,6 +4,8 @@ module CD = Vyos1x.Config_diff
 module RT = Vyos1x.Reference_tree
 module FP = FilePath
 
+module IC = Vyos1x.Internal.Make(CT)
+
 type commit_data = {
     script: string option;
     priority: int;
@@ -20,7 +22,12 @@ let default_commit_data = {
     arg_value = None;
     path = [];
 }
-
+(*
+type client = {
+    ic: Lwt_io.input Lwt_io.channel;
+    oc: Lwt_io.output Lwt_io.channel;
+}
+*)
 let lex_order c1 c2 =
     let c = Vyos1x.Util.lex_order c1.path c2.path in
     match c with
@@ -146,3 +153,30 @@ let show_commit_data at wt =
         let del_out = List.fold_left sprint_commit_data "" del_list in
         let add_out = List.fold_left sprint_commit_data "" add_list in
         del_out ^ "\n" ^ add_out
+(*
+let test_commit at wt =
+    let vc =
+        Startup.load_daemon_config Defaults.defaults.config_file in
+    let () = IC.write_internal at (FP.concat vc.session_dir vc.running_cache)
+    let () = IC.write_internal at (FP.concat vc.session_dir vc.working_cache)
+    let rt_opt =
+        Startup.read_reference_tree (FP.concat vc.reftree_dir vc.reference_tree)
+    in
+    match rt_opt with
+    | Error msg -> msg
+    | Ok rt ->
+        let del_list, add_list =
+            calculate_priority_lists rt at wt
+        in
+        let commit_list = del_list @ add_list in
+        let commit_msg_list = package_commit commit_list in
+        let init_response = Dispatch_client.init in
+        match init_response with
+        | Error e print_endline e
+        | Ok s -> print_endline s;
+            let call_response =
+                Dispatch_client.call commit_msg_list in
+            match call_reponse with
+            | Ok s -> print_endline s
+            | Error e -> print_endline e
+*)
