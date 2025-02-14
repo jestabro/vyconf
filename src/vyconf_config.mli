@@ -4,6 +4,7 @@ type t = {
     program_dir: string;
     config_dir: string;
     reftree_dir: string;
+    session_dir: string;
     primary_config: string;
     fallback_config: string;
     reference_tree: string;

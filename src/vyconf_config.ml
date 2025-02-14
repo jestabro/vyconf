@@ -6,6 +6,7 @@ type t = {
     program_dir: string;
     config_dir: string;
     reftree_dir: string;
+    session_dir: string;
     primary_config: string;
     fallback_config: string;
     reference_tree: string;
@@ -24,6 +25,7 @@ let empty_config = {
     program_dir = "";
     config_dir = "";
     reftree_dir = "";
+    session_dir = "";
     primary_config = "";
     fallback_config = "";
     reference_tree = "";
