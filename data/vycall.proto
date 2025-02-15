@@ -1,12 +1,12 @@
-message Dispatch {
+message Request {
     message Init {
         // optional explicit load;
         // otherwise, session configs are loaded from cached internal
         // representation, specified by session token value
         optional string config_active = 1;
         optional string config_proposed = 2;
-        optional bool dry_run = 3;
-        optional bool atomic = 4;
+        bool dry_run = 3;
+        bool atomic = 4;
     }
     message Call {
         required string script = 1;
@@ -20,9 +20,9 @@ message Dispatch {
     }
 }
 
-message DispatchEnvelope {
+message RequestEnvelope {
     required int32 token = 1;
-    required Dispatch dispatch = 2;
+    required Request request = 2;
 }
 
 enum Error {
