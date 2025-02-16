@@ -83,7 +83,7 @@ let run () =
 
     Lwt_log.add_rule "*" Lwt_log.Debug;
 
-    let sockfile = "/tmp/vycommitd.sock" in
+    let sockfile = "/run/vyos-commitd.sock" in
     let%lwt client = create sockfile in
 (*    let req = Initialization { pid=137l } in
     let%lwt resp = do_request client req in
