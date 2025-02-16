@@ -1,4 +1,4 @@
-open Vydispatch_message.Vydispatch_pbt
+open Vycall_message.Vycall_pbt
 
 type t = {
 (*    sock: Lwt_unix.file_descr;*)
@@ -53,9 +53,9 @@ let do_read ic =
 (*    Lwt.return length*)
 
 let do_request client req =
-    let request = {token = 137l; dispatch=req} in
+    let request = {token = 137l; commit=req} in
     let enc = Pbrt.Encoder.create () in
-    let () = encode_pb_dispatch_envelope request enc in
+    let () = encode_pb_commit_envelope request enc in
     let msg = Pbrt.Encoder.to_bytes enc in
     let%lwt () = do_write client.oc msg in
     Lwt_log.debug (Printf.sprintf "do_write %d\n" 0) |> Lwt.ignore_result;
@@ -83,13 +83,15 @@ let run () =
 
     Lwt_log.add_rule "*" Lwt_log.Debug;
 
-    let sockfile = "/tmp/vydispatchd.sock" in
+    let sockfile = "/tmp/vycommitd.sock" in
     let%lwt client = create sockfile in
 (*    let req = Initialization { pid=137l } in
     let%lwt resp = do_request client req in
     let%lwt () = Lwt_io.write Lwt_io.stdout resp.output in *)
     let req_init =
-        Init { config_active=None; config_proposed=None; dry_run=Some true; atomic=None }
+        Init { named_active=None;
+               named_proposed=None;
+               dry_run=true; atomic=false; background=false }
     in
     let%lwt resp_init = do_request client req_init in
     let%lwt () = Lwt_io.write Lwt_io.stdout resp_init.output in
