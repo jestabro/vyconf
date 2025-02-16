@@ -1,12 +1,14 @@
-message Request {
+message Commit {
     message Init {
         // optional explicit load;
         // otherwise, session configs are loaded from cached internal
         // representation, specified by session token value
-        optional string config_active = 1;
-        optional string config_proposed = 2;
-        bool dry_run = 3;
-        bool atomic = 4;
+        optional string named_active = 1;
+        optional string named_proposed = 2;
+        //
+        required bool dry_run = 3;
+        required bool atomic = 4;
+        required bool background = 5;
     }
     message Call {
         required string script = 1;
@@ -20,9 +22,9 @@ message Request {
     }
 }
 
-message RequestEnvelope {
+message CommitEnvelope {
     required int32 token = 1;
-    required Request request = 2;
+    required Commit commit = 2;
 }
 
 enum Error {
@@ -30,6 +32,7 @@ enum Error {
     CONFIG_ERROR = 1;
     DAEMON_ERROR = 2;
     PASS_THROUGH = 3;
+    BACKGROUND = 4;
 }
 
 message Result {
