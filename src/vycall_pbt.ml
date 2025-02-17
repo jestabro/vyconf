@@ -26,8 +26,7 @@ type commit_envelope = {
 type error =
   | Success 
   | Config_error 
-  | Daemon_error 
-  | Pass_through 
+  | Sync_error 
   | Background 
 
 type result = {
@@ -165,8 +164,7 @@ let rec pp_error fmt (v:error) =
   match v with
   | Success -> Format.fprintf fmt "Success"
   | Config_error -> Format.fprintf fmt "Config_error"
-  | Daemon_error -> Format.fprintf fmt "Daemon_error"
-  | Pass_through -> Format.fprintf fmt "Pass_through"
+  | Sync_error -> Format.fprintf fmt "Sync_error"
   | Background -> Format.fprintf fmt "Background"
 
 let rec pp_result fmt (v:result) = 
@@ -239,9 +237,8 @@ let rec encode_pb_error (v:error) encoder =
   match v with
   | Success -> Pbrt.Encoder.int_as_varint (0) encoder
   | Config_error -> Pbrt.Encoder.int_as_varint 1 encoder
-  | Daemon_error -> Pbrt.Encoder.int_as_varint 2 encoder
-  | Pass_through -> Pbrt.Encoder.int_as_varint 3 encoder
-  | Background -> Pbrt.Encoder.int_as_varint 4 encoder
+  | Sync_error -> Pbrt.Encoder.int_as_varint 2 encoder
+  | Background -> Pbrt.Encoder.int_as_varint 3 encoder
 
 let rec encode_pb_result (v:result) encoder = 
   encode_pb_error v.error encoder;
@@ -381,9 +378,8 @@ let rec decode_pb_error d =
   match Pbrt.Decoder.int_as_varint d with
   | 0 -> (Success:error)
   | 1 -> (Config_error:error)
-  | 2 -> (Daemon_error:error)
-  | 3 -> (Pass_through:error)
-  | 4 -> (Background:error)
+  | 2 -> (Sync_error:error)
+  | 3 -> (Background:error)
   | _ -> Pbrt.Decoder.malformed_variant "error"
 
 let rec decode_pb_result d =

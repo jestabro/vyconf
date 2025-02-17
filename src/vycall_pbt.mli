@@ -33,8 +33,7 @@ type commit_envelope = {
 type error =
   | Success 
   | Config_error 
-  | Daemon_error 
-  | Pass_through 
+  | Sync_error 
   | Background 
 
 type result = {
