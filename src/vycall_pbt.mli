@@ -16,7 +16,7 @@ type commit_init = {
 }
 
 type commit_call = {
-  script : string;
+  script_name : string;
   tag_value : string option;
   arg_value : string option;
 }
@@ -38,7 +38,7 @@ type error =
 
 type result = {
   error : error;
-  output : string;
+  out : string;
 }
 
 
@@ -55,7 +55,7 @@ val default_commit_init :
 (** [default_commit_init ()] is the default value for type [commit_init] *)
 
 val default_commit_call : 
-  ?script:string ->
+  ?script_name:string ->
   ?tag_value:string option ->
   ?arg_value:string option ->
   unit ->
@@ -77,7 +77,7 @@ val default_error : unit -> error
 
 val default_result : 
   ?error:error ->
-  ?output:string ->
+  ?out:string ->
   unit ->
   result
 (** [default_result ()] is the default value for type [result] *)

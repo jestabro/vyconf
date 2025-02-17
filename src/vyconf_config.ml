@@ -10,6 +10,8 @@ type t = {
     primary_config: string;
     fallback_config: string;
     reference_tree: string;
+    running_cache: string;
+    working_cache: string;
     socket: string;
     pid_file: string;
     log_file: string option;
@@ -29,6 +31,8 @@ let empty_config = {
     primary_config = "";
     fallback_config = "";
     reference_tree = "";
+    running_cache = "";
+    working_cache = "";
     socket = "";
     pid_file = "";
     log_file = None;

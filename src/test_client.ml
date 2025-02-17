@@ -94,11 +94,11 @@ let run () =
                dry_run=true; atomic=false; background=false }
     in
     let%lwt resp_init = do_request client req_init in
-    let%lwt () = Lwt_io.write Lwt_io.stdout resp_init.output in
+    let%lwt () = Lwt_io.write Lwt_io.stdout resp_init.out in
 
-    let req = Call { script="Some other message"; tag_value=None; arg_value=None } in
+    let req = Call { script_name="Some other message"; tag_value=None; arg_value=None } in
     let%lwt resp = do_request client req in
-    let%lwt () = Lwt_io.write Lwt_io.stdout resp.output in
+    let%lwt () = Lwt_io.write Lwt_io.stdout resp.out in
 (*    let%lwt () = Lwt_io.write Lwt_io.stdout "dummy\n" in*)
     Lwt_io.flush Lwt_io.stdout
 

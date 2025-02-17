@@ -9,7 +9,7 @@ type commit_init = {
 }
 
 type commit_call = {
-  script : string;
+  script_name : string;
   tag_value : string option;
   arg_value : string option;
 }
@@ -31,7 +31,7 @@ type error =
 
 type result = {
   error : error;
-  output : string;
+  out : string;
 }
 
 let rec default_commit_init 
@@ -49,11 +49,11 @@ let rec default_commit_init
 }
 
 let rec default_commit_call 
-  ?script:((script:string) = "")
+  ?script_name:((script_name:string) = "")
   ?tag_value:((tag_value:string option) = None)
   ?arg_value:((arg_value:string option) = None)
   () : commit_call  = {
-  script;
+  script_name;
   tag_value;
   arg_value;
 }
@@ -72,10 +72,10 @@ let rec default_error () = (Success:error)
 
 let rec default_result 
   ?error:((error:error) = default_error ())
-  ?output:((output:string) = "")
+  ?out:((out:string) = "")
   () : result  = {
   error;
-  output;
+  out;
 }
 
 type commit_init_mutable = {
@@ -95,13 +95,13 @@ let default_commit_init_mutable () : commit_init_mutable = {
 }
 
 type commit_call_mutable = {
-  mutable script : string;
+  mutable script_name : string;
   mutable tag_value : string option;
   mutable arg_value : string option;
 }
 
 let default_commit_call_mutable () : commit_call_mutable = {
-  script = "";
+  script_name = "";
   tag_value = None;
   arg_value = None;
 }
@@ -118,12 +118,12 @@ let default_commit_envelope_mutable () : commit_envelope_mutable = {
 
 type result_mutable = {
   mutable error : error;
-  mutable output : string;
+  mutable out : string;
 }
 
 let default_result_mutable () : result_mutable = {
   error = default_error ();
-  output = "";
+  out = "";
 }
 
 [@@@ocaml.warning "-27-30-39"]
@@ -142,7 +142,7 @@ let rec pp_commit_init fmt (v:commit_init) =
 
 let rec pp_commit_call fmt (v:commit_call) = 
   let pp_i fmt () =
-    Pbrt.Pp.pp_record_field ~first:true "script" Pbrt.Pp.pp_string fmt v.script;
+    Pbrt.Pp.pp_record_field ~first:true "script_name" Pbrt.Pp.pp_string fmt v.script_name;
     Pbrt.Pp.pp_record_field ~first:false "tag_value" (Pbrt.Pp.pp_option Pbrt.Pp.pp_string) fmt v.tag_value;
     Pbrt.Pp.pp_record_field ~first:false "arg_value" (Pbrt.Pp.pp_option Pbrt.Pp.pp_string) fmt v.arg_value;
   in
@@ -170,7 +170,7 @@ let rec pp_error fmt (v:error) =
 let rec pp_result fmt (v:result) = 
   let pp_i fmt () =
     Pbrt.Pp.pp_record_field ~first:true "error" pp_error fmt v.error;
-    Pbrt.Pp.pp_record_field ~first:false "output" Pbrt.Pp.pp_string fmt v.output;
+    Pbrt.Pp.pp_record_field ~first:false "out" Pbrt.Pp.pp_string fmt v.out;
   in
   Pbrt.Pp.pp_brk pp_i fmt ()
 
@@ -200,7 +200,7 @@ let rec encode_pb_commit_init (v:commit_init) encoder =
   ()
 
 let rec encode_pb_commit_call (v:commit_call) encoder = 
-  Pbrt.Encoder.string v.script encoder;
+  Pbrt.Encoder.string v.script_name encoder;
   Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
   begin match v.tag_value with
   | Some x -> 
@@ -243,7 +243,7 @@ let rec encode_pb_error (v:error) encoder =
 let rec encode_pb_result (v:result) encoder = 
   encode_pb_error v.error encoder;
   Pbrt.Encoder.key 1 Pbrt.Varint encoder; 
-  Pbrt.Encoder.string v.output encoder;
+  Pbrt.Encoder.string v.out encoder;
   Pbrt.Encoder.key 2 Pbrt.Bytes encoder; 
   ()
 
@@ -302,13 +302,13 @@ let rec decode_pb_commit_init d =
 let rec decode_pb_commit_call d =
   let v = default_commit_call_mutable () in
   let continue__= ref true in
-  let script_is_set = ref false in
+  let script_name_is_set = ref false in
   while !continue__ do
     match Pbrt.Decoder.key d with
     | None -> (
     ); continue__ := false
     | Some (1, Pbrt.Bytes) -> begin
-      v.script <- Pbrt.Decoder.string d; script_is_set := true;
+      v.script_name <- Pbrt.Decoder.string d; script_name_is_set := true;
     end
     | Some (1, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(commit_call), field(1)" pk
@@ -324,9 +324,9 @@ let rec decode_pb_commit_call d =
       Pbrt.Decoder.unexpected_payload "Message(commit_call), field(3)" pk
     | Some (_, payload_kind) -> Pbrt.Decoder.skip d payload_kind
   done;
-  begin if not !script_is_set then Pbrt.Decoder.missing_field "script" end;
+  begin if not !script_name_is_set then Pbrt.Decoder.missing_field "script_name" end;
   ({
-    script = v.script;
+    script_name = v.script_name;
     tag_value = v.tag_value;
     arg_value = v.arg_value;
   } : commit_call)
@@ -385,7 +385,7 @@ let rec decode_pb_error d =
 let rec decode_pb_result d =
   let v = default_result_mutable () in
   let continue__= ref true in
-  let output_is_set = ref false in
+  let out_is_set = ref false in
   let error_is_set = ref false in
   while !continue__ do
     match Pbrt.Decoder.key d with
@@ -397,15 +397,15 @@ let rec decode_pb_result d =
     | Some (1, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(result), field(1)" pk
     | Some (2, Pbrt.Bytes) -> begin
-      v.output <- Pbrt.Decoder.string d; output_is_set := true;
+      v.out <- Pbrt.Decoder.string d; out_is_set := true;
     end
     | Some (2, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(result), field(2)" pk
     | Some (_, payload_kind) -> Pbrt.Decoder.skip d payload_kind
   done;
-  begin if not !output_is_set then Pbrt.Decoder.missing_field "output" end;
+  begin if not !out_is_set then Pbrt.Decoder.missing_field "out" end;
   begin if not !error_is_set then Pbrt.Decoder.missing_field "error" end;
   ({
     error = v.error;
-    output = v.output;
+    out = v.out;
   } : result)
