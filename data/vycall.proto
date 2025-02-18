@@ -1,37 +1,29 @@
-message Commit {
-    message Init {
-        // optional explicit load;
-        // otherwise, session configs are loaded from cached internal
-        // representation, specified by session token value
-        optional string named_active = 1;
-        optional string named_proposed = 2;
-        //
-        required bool dry_run = 3;
-        required bool atomic = 4;
-        required bool background = 5;
-    }
-    message Call {
-        required string script_name = 1;
-        optional string tag_value = 2;
-        optional string arg_value = 3;
-    }
-
-    oneof msg {
-        Init init = 1;
-        Call call = 2;
-    }
+message Call {
+    required string script_name = 1;
+    optional string tag_value = 2;
+    optional string arg_value = 3;
 }
 
-message CommitEnvelope {
-    required int32 token = 1;
-    required Commit commit = 2;
+message Commit {
+    required int32 session_id = 1;
+    // optional explicit load;
+    // otherwise, session configs are loaded from cached internal
+    // representation, specified by session id value
+    optional string named_active = 2;
+    optional string named_proposed = 3;
+    //
+    required bool dry_run = 4;
+    required bool atomic = 5;
+    required bool background = 6;
+
+    repeated Call calls = 7;
 }
 
 enum Error {
     SUCCESS = 0;
     CONFIG_ERROR = 1;
-    SYNC_ERROR = 2;
-    BACKGROUND = 3;
+    DAEMON_ERROR = 2;
+    BACKGROUND = 4;
 }
 
 message Result {

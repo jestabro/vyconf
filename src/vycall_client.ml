@@ -14,6 +14,10 @@ type t = {
     oc: Lwt_io.output Lwt_io.channel;
 }
 
+let default_call = {script_name=""; tag_value=None; arg_value=None}
+let default_commit = {session_id=0l; named_active=None; named_proposed=None;
+                      dry_run=false; atomic=false; background=false;
+                      calls=[] }
 let do_write oc msg =
     let length = Bytes.length msg in
     let length' = Int32.of_int length in
@@ -32,10 +36,9 @@ let do_read ic =
     let%lwt () = Lwt_io.read_into_exactly ic buffer 0 length in
     Lwt.return buffer
 
-let do_call client req =
-    let request = {token = 137l; commit=req} in
+let do_call client request =
     let enc = Pbrt.Encoder.create () in
-    let () = encode_pb_commit_envelope request enc in
+    let () = encode_pb_commit request enc in
     let msg = Pbrt.Encoder.to_bytes enc in
     let%lwt () = do_write client.oc msg in
     let%lwt resp = do_read client.ic in
@@ -53,15 +56,12 @@ let commit _session =
     let run () =
         let sockfile = "/run/vyos-commitd.sock" in
         let%lwt client = create sockfile in
-        let req_init =
-            Init { named_active=None;
-                   named_proposed=None;
-                   dry_run=false; atomic=false; background=false }
-        in
-        let%lwt resp_init = do_call client req_init in
-        let%lwt () = Lwt_io.write Lwt_io.stdout resp_init.out in
 
-        let req = Call { script_name="Some other message"; tag_value=None; arg_value=None } in
+        let cmds = [{ default_call with script_name="foo" };
+                    { default_call with script_name="bar" }]
+        in
+        let req = { default_commit with calls=cmds } in
+
         let%lwt resp = do_call client req in
         let%lwt () = Lwt_io.write Lwt_io.stdout resp.out in
         Lwt_io.flush Lwt_io.stdout
@@ -73,7 +73,7 @@ let test_commit at wt =
     let () =
         IC.write_internal at (FP.concat vc.session_dir vc.running_cache) in
     let () =
-        IC.write_internal at (FP.concat vc.session_dir vc.working_cache) in
+        IC.write_internal wt (FP.concat vc.session_dir vc.working_cache) in
     let rt_opt =
         ST.read_reference_tree (FP.concat vc.reftree_dir vc.reference_tree)
     in
