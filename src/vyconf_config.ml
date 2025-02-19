@@ -69,10 +69,13 @@ let load filename =
             let conf = {conf with data_dir = mandatory_field conf_toml "appliance" "data_dir"} in
             let conf = {conf with config_dir = mandatory_field conf_toml "appliance" "config_dir"} in
             let conf = {conf with reftree_dir = mandatory_field conf_toml "appliance" "reftree_dir"} in
+            let conf = {conf with session_dir = mandatory_field conf_toml "appliance" "session_dir"} in
             let conf = {conf with program_dir = mandatory_field conf_toml "appliance" "program_dir"} in
             let conf = {conf with primary_config = mandatory_field conf_toml "appliance" "primary_config"} in
             let conf = {conf with fallback_config = mandatory_field conf_toml "appliance" "fallback_config"} in
             let conf = {conf with reference_tree = mandatory_field conf_toml "appliance" "reference_tree"} in
+            let conf = {conf with running_cache = mandatory_field conf_toml "appliance" "running_cache"} in
+            let conf = {conf with working_cache = mandatory_field conf_toml "appliance" "working_cache"} in
             (* Optional fields *)
             let conf = {conf with pid_file = optional_field defaults.pid_file conf_toml "vyconf" "pid_file"} in
             let conf = {conf with socket = optional_field defaults.socket conf_toml "vyconf" "socket"} in
