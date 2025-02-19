@@ -64,7 +64,8 @@ let commit _session =
 
         let%lwt resp = do_call client req in
         let%lwt () = Lwt_io.write Lwt_io.stdout resp.out in
-        Lwt_io.flush Lwt_io.stdout
+        let%lwt () = Lwt_io.flush Lwt_io.stdout in
+        Lwt_io.close client.oc
     in Lwt_main.run @@ run ()
 
 let test_commit at wt =
