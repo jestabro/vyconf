@@ -14,11 +14,21 @@ type t = {
     oc: Lwt_io.output Lwt_io.channel;
 }
 
-let default_call = {script_name=""; tag_value=None; arg_value=None}
-let default_commit = {session_id=0l; named_active=None; named_proposed=None;
-                      dry_run=false; atomic=false; background=false;
-                      calls=[] }
-let do_write oc msg =
+let default_commit = {
+    session_id=0l;
+    named_active=None;
+    named_proposed=None;
+    dry_run=false;
+    atomic=false;
+    background=false;
+    calls=[] }
+
+let node_data_to_call nd =
+    { script_name=nd.script_name;
+      tag_value=nd.tag_value;
+      arg_value=nd.arg_value }
+
+let call_write oc msg =
     let length = Bytes.length msg in
     let length' = Int32.of_int length in
     if length' < 0l then failwith (Printf.sprintf "Bad message length: %d" length) else
@@ -27,7 +37,7 @@ let do_write oc msg =
     let%lwt () = Lwt_io.write_from_exactly oc header 0 4 in
     Lwt_io.write_from_exactly oc msg 0 length
 
-let do_read ic =
+let call_read ic =
     let header = Bytes.create 4 in
     let%lwt () = Lwt_io.read_into_exactly ic header 0 4 in
     let length = EndianBytes.BigEndian.get_int32 header 0 |> Int32.to_int in
@@ -40,8 +50,8 @@ let do_call client request =
     let enc = Pbrt.Encoder.create () in
     let () = encode_pb_commit request enc in
     let msg = Pbrt.Encoder.to_bytes enc in
-    let%lwt () = do_write client.oc msg in
-    let%lwt resp = do_read client.ic in
+    let%lwt () = call_write client.oc msg in
+    let%lwt resp = call_read client.ic in
     decode_pb_result (Pbrt.Decoder.of_bytes resp) |> Lwt.return
 
 let create sockfile =
@@ -52,17 +62,11 @@ let create sockfile =
     let oc = Lwt_io.of_fd ~mode:Lwt_io.Output sock in
     Lwt.return { ic=ic; oc=oc; }
 
-let commit _session =
+let commit session =
     let run () =
         let sockfile = "/run/vyos-commitd.sock" in
         let%lwt client = create sockfile in
-
-        let cmds = [{ default_call with script_name="foo" };
-                    { default_call with script_name="bar" }]
-        in
-        let req = { default_commit with calls=cmds } in
-
-        let%lwt resp = do_call client req in
+        let%lwt resp = do_call client session in
         let%lwt () = Lwt_io.write Lwt_io.stdout resp.out in
         let%lwt () = Lwt_io.flush Lwt_io.stdout in
         Lwt_io.close client.oc
@@ -84,8 +88,8 @@ let test_commit at wt =
         let del_list, add_list =
             calculate_priority_lists rt at wt
         in
-        let commit_l = del_list @ add_list in
+        let node_list = del_list @ add_list in
         let commit_session =
-            { default_commit_session with commit_list = commit_l; }
+            { default_commit with calls = List.map node_data_to_call node_list; }
         in
         commit commit_session

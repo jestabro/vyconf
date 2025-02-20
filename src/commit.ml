@@ -4,8 +4,8 @@ module CD = Vyos1x.Config_diff
 module RT = Vyos1x.Reference_tree
 module FP = FilePath
 
-type commit_data = {
-    script_name: string option;
+type node_data = {
+    script_name: string;
     priority: int;
     tag_value: string option;
     arg_value: string option;
@@ -13,26 +13,28 @@ type commit_data = {
 } [@@deriving yojson]
 
 
-let default_commit_data = {
-    script_name = None;
+let default_node_data = {
+    script_name = "";
     priority = 0;
     tag_value = None;
     arg_value = None;
     path = [];
 }
 
-type commit_session = {
+type session_data = {
+    session_id: int32;
     dry_run: bool;
     atomic: bool;
     background: bool;
-    commit_list: commit_data list;
+    node_list: node_data list;
 } [@@deriving yojson]
 
-let default_commit_session = {
+let default_session_data = {
+    session_id = 0l;
     dry_run = false;
     atomic = false;
     background = false;
-    commit_list = [];
+    node_list = [];
 }
 
 let lex_order c1 c2 =
@@ -47,7 +49,7 @@ let lex_order c1 c2 =
     | _ as a -> a
 
 module CI = struct
-    type t = commit_data
+    type t = node_data
     let compare a b =
         match compare a.priority b.priority with
         | 0 -> lex_order a b
@@ -55,24 +57,21 @@ module CI = struct
 end
 module CS = Set.Make(CI)
 
-let owner_args_from_data p s =
-    match s with
-    | None -> None, None
-    | Some o ->
+let owner_args_from_data p o =
     let oa = Pcre.split o in
     let owner = FilePath.basename (List.nth oa 0) in
-    if List.length oa < 2 then Some owner, None
+    if List.length oa < 2 then owner, None
     else
     let var = List.nth oa 1 in
     let res = Pcre.extract_all ~pat:"\\.\\./" var in
     let var_pos = Array.length res in
     let arg_value = Vyos1x.Util.get_last_n p var_pos
-    in Some owner, arg_value
+    in owner, arg_value
 
 let add_tag_instance cd cs tv =
     CS.add { cd with tag_value = Some tv; } cs
 
-let get_commit_data rt ct (path, cs') t =
+let get_node_data rt ct (path, cs') t =
     if Vyos1x.Util.is_empty path then
         (path, cs')
     else
@@ -92,10 +91,11 @@ let get_commit_data rt ct (path, cs') t =
         | Some s -> int_of_string s
     in
     let owner = RT.get_owner rt rt_path in
-    if  owner = None then (path, cs')
-    else
-    let (own, arg) = owner_args_from_data rpath owner in
-    let c_data = { default_commit_data with
+    match owner with
+    | None -> (path, cs')
+    | Some owner_str ->
+    let (own, arg) = owner_args_from_data rpath owner_str in
+    let c_data = { default_node_data with
                    script_name = own;
                    priority = priority;
                    arg_value = arg;
@@ -113,7 +113,7 @@ let get_commit_data rt ct (path, cs') t =
     in (path, cs)
 
 let get_commit_set rt ct =
-    snd (VT.fold_tree_with_path (get_commit_data rt ct) ([], CS.empty) ct)
+    snd (VT.fold_tree_with_path (get_node_data rt ct) ([], CS.empty) ct)
 
 (* for initial consistency with the legacy ordering of delete and add
    queues, enforce the following subtlety: if a path in the delete tree is
@@ -154,9 +154,9 @@ let show_commit_data at wt =
         let del_list, add_list =
             calculate_priority_lists rt at wt
         in
-        let sprint_commit_data acc s =
-            acc ^ "\n" ^ (commit_data_to_yojson s |> Yojson.Safe.to_string)
+        let sprint_node_data acc s =
+            acc ^ "\n" ^ (node_data_to_yojson s |> Yojson.Safe.to_string)
         in
-        let del_out = List.fold_left sprint_commit_data "" del_list in
-        let add_out = List.fold_left sprint_commit_data "" add_list in
+        let del_out = List.fold_left sprint_node_data "" del_list in
+        let add_out = List.fold_left sprint_node_data "" add_list in
         del_out ^ "\n" ^ add_out
