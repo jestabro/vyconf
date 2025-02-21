@@ -10,6 +10,7 @@ type node_data = {
     tag_value: string option;
     arg_value: string option;
     path: string list;
+    out: string;
 } [@@deriving yojson]
 
 
@@ -19,18 +20,23 @@ let default_node_data = {
     tag_value = None;
     arg_value = None;
     path = [];
+    out = "";
 }
 
-type session_data = {
-    session_id: int32;
+type commit_data = {
+    session_id: string;
+    named_active : string option;
+    named_proposed : string option;
     dry_run: bool;
     atomic: bool;
     background: bool;
     node_list: node_data list;
 } [@@deriving yojson]
 
-let default_session_data = {
-    session_id = 0l;
+let default_commit_data = {
+    session_id = "";
+    named_active = None;
+    named_proposed = None;
     dry_run = false;
     atomic = false;
     background = false;
@@ -141,7 +147,11 @@ let calculate_priority_lists rt at wt =
     let cs_add' = get_commit_set rt add_tree in
     let cs_del, cs_add = legacy_order del_tree cs_del' cs_add' in
     List.rev (CS.elements cs_del), CS.elements cs_add
-
+(*
+let commit_store _c_data =
+    print_endline "commit_store";
+    print_endline (session_data_to_yojson s_data |> Yojson.Safe.to_string)
+*)
 let show_commit_data at wt =
     let vc =
         Startup.load_daemon_config Defaults.defaults.config_file in

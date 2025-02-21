@@ -1,11 +1,24 @@
+enum Error {
+    SUCCESS = 0;
+    CONFIG_ERROR = 1;
+    DAEMON_ERROR = 2;
+    BACKGROUND = 4;
+}
+
+message Reply {
+    required Error error = 1;
+    required string out = 2;
+}
+
 message Call {
     required string script_name = 1;
     optional string tag_value = 2;
     optional string arg_value = 3;
+    optional Reply reply = 4;
 }
 
 message Commit {
-    required int32 session_id = 1;
+    required string session_id = 1;
     // optional explicit load;
     // otherwise, session configs are loaded from cached internal
     // representation, specified by session id value
@@ -17,16 +30,4 @@ message Commit {
     required bool background = 6;
 
     repeated Call calls = 7;
-}
-
-enum Error {
-    SUCCESS = 0;
-    CONFIG_ERROR = 1;
-    DAEMON_ERROR = 2;
-    BACKGROUND = 4;
-}
-
-message Result {
-    required Error error = 1;
-    required string out = 2;
 }

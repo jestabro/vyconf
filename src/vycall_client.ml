@@ -15,7 +15,7 @@ type t = {
 }
 
 let default_commit = {
-    session_id=0l;
+    session_id="";
     named_active=None;
     named_proposed=None;
     dry_run=false;
@@ -26,7 +26,8 @@ let default_commit = {
 let node_data_to_call nd =
     { script_name=nd.script_name;
       tag_value=nd.tag_value;
-      arg_value=nd.arg_value }
+      arg_value=nd.arg_value;
+      reply=None}
 
 let call_write oc msg =
     let length = Bytes.length msg in
@@ -52,7 +53,7 @@ let do_call client request =
     let msg = Pbrt.Encoder.to_bytes enc in
     let%lwt () = call_write client.oc msg in
     let%lwt resp = call_read client.ic in
-    decode_pb_result (Pbrt.Decoder.of_bytes resp) |> Lwt.return
+    decode_pb_commit (Pbrt.Decoder.of_bytes resp) |> Lwt.return
 
 let create sockfile =
     let open Lwt_unix in
@@ -61,13 +62,22 @@ let create sockfile =
     let ic = Lwt_io.of_fd ~mode:Lwt_io.Input sock in
     let oc = Lwt_io.of_fd ~mode:Lwt_io.Output sock in
     Lwt.return { ic=ic; oc=oc; }
-
+(*
+let update session =
+    commit_store session
+*)
 let commit session =
     let run () =
         let sockfile = "/run/vyos-commitd.sock" in
         let%lwt client = create sockfile in
         let%lwt resp = do_call client session in
-        let%lwt () = Lwt_io.write Lwt_io.stdout resp.out in
+        let func s =
+            match s.reply with
+            | None -> Lwt_io.write Lwt_io.stdout "none"
+            | Some r ->  Lwt_io.write Lwt_io.stdout r.out
+        in
+        let%lwt () =
+            Lwt_list.iter_s func resp.calls in
         let%lwt () = Lwt_io.flush Lwt_io.stdout in
         Lwt_io.close client.oc
     in Lwt_main.run @@ run ()

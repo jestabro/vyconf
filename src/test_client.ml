@@ -5,8 +5,8 @@ type t = {
     oc: Lwt_io.output Lwt_io.channel;
 }
 
-let default_call = { script_name=""; tag_value=None; arg_value=None }
-let default_commit = { session_id=0l; named_active=None; named_proposed=None;
+let default_call = { script_name=""; tag_value=None; arg_value=None; reply=None }
+let default_commit = { session_id=""; named_active=None; named_proposed=None;
                        dry_run=false; atomic=false; background=false;
                        calls=[] }
 
@@ -56,7 +56,7 @@ let do_request client request =
     Lwt_log.debug (Printf.sprintf "do_write %d\n" 0) |> Lwt.ignore_result;
     let%lwt resp = do_read client.ic in
     Lwt_log.debug (Printf.sprintf "do_read %d\n" 0) |> Lwt.ignore_result;
-    decode_pb_result (Pbrt.Decoder.of_bytes resp) |> Lwt.return
+    decode_pb_commit (Pbrt.Decoder.of_bytes resp) |> Lwt.return
 
 let run () =
     Lwt_log.default :=
@@ -77,7 +77,8 @@ let run () =
     let req = { default_commit with calls=cmds } in
 
     let%lwt resp = do_request client req in
-    let%lwt () = Lwt_io.write Lwt_io.stdout resp.out in
+    let%lwt () =
+        Lwt_list.iter_s (fun s -> match s.reply with |None -> Lwt_io.write Lwt_io.stdout "none"|Some r ->  Lwt_io.write Lwt_io.stdout r.out) resp.calls in
     Lwt_io.flush Lwt_io.stdout
 
 let _ = Lwt_main.run @@ run ()

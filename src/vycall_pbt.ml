@@ -1,13 +1,25 @@
 [@@@ocaml.warning "-27-30-39-44"]
 
+type error =
+  | Success 
+  | Config_error 
+  | Daemon_error 
+  | Background 
+
+type reply = {
+  error : error;
+  out : string;
+}
+
 type call = {
   script_name : string;
   tag_value : string option;
   arg_value : string option;
+  reply : reply option;
 }
 
 type commit = {
-  session_id : int32;
+  session_id : string;
   named_active : string option;
   named_proposed : string option;
   dry_run : bool;
@@ -16,29 +28,30 @@ type commit = {
   calls : call list;
 }
 
-type error =
-  | Success 
-  | Config_error 
-  | Daemon_error 
-  | Background 
+let rec default_error () = (Success:error)
 
-type result = {
-  error : error;
-  out : string;
+let rec default_reply 
+  ?error:((error:error) = default_error ())
+  ?out:((out:string) = "")
+  () : reply  = {
+  error;
+  out;
 }
 
 let rec default_call 
   ?script_name:((script_name:string) = "")
   ?tag_value:((tag_value:string option) = None)
   ?arg_value:((arg_value:string option) = None)
+  ?reply:((reply:reply option) = None)
   () : call  = {
   script_name;
   tag_value;
   arg_value;
+  reply;
 }
 
 let rec default_commit 
-  ?session_id:((session_id:int32) = 0l)
+  ?session_id:((session_id:string) = "")
   ?named_active:((named_active:string option) = None)
   ?named_proposed:((named_proposed:string option) = None)
   ?dry_run:((dry_run:bool) = false)
@@ -55,30 +68,32 @@ let rec default_commit
   calls;
 }
 
-let rec default_error () = (Success:error)
+type reply_mutable = {
+  mutable error : error;
+  mutable out : string;
+}
 
-let rec default_result 
-  ?error:((error:error) = default_error ())
-  ?out:((out:string) = "")
-  () : result  = {
-  error;
-  out;
+let default_reply_mutable () : reply_mutable = {
+  error = default_error ();
+  out = "";
 }
 
 type call_mutable = {
   mutable script_name : string;
   mutable tag_value : string option;
   mutable arg_value : string option;
+  mutable reply : reply option;
 }
 
 let default_call_mutable () : call_mutable = {
   script_name = "";
   tag_value = None;
   arg_value = None;
+  reply = None;
 }
 
 type commit_mutable = {
-  mutable session_id : int32;
+  mutable session_id : string;
   mutable named_active : string option;
   mutable named_proposed : string option;
   mutable dry_run : bool;
@@ -88,7 +103,7 @@ type commit_mutable = {
 }
 
 let default_commit_mutable () : commit_mutable = {
-  session_id = 0l;
+  session_id = "";
   named_active = None;
   named_proposed = None;
   dry_run = false;
@@ -97,31 +112,36 @@ let default_commit_mutable () : commit_mutable = {
   calls = [];
 }
 
-type result_mutable = {
-  mutable error : error;
-  mutable out : string;
-}
-
-let default_result_mutable () : result_mutable = {
-  error = default_error ();
-  out = "";
-}
-
 [@@@ocaml.warning "-27-30-39"]
 
 (** {2 Formatters} *)
+
+let rec pp_error fmt (v:error) =
+  match v with
+  | Success -> Format.fprintf fmt "Success"
+  | Config_error -> Format.fprintf fmt "Config_error"
+  | Daemon_error -> Format.fprintf fmt "Daemon_error"
+  | Background -> Format.fprintf fmt "Background"
+
+let rec pp_reply fmt (v:reply) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "error" pp_error fmt v.error;
+    Pbrt.Pp.pp_record_field ~first:false "out" Pbrt.Pp.pp_string fmt v.out;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
 
 let rec pp_call fmt (v:call) = 
   let pp_i fmt () =
     Pbrt.Pp.pp_record_field ~first:true "script_name" Pbrt.Pp.pp_string fmt v.script_name;
     Pbrt.Pp.pp_record_field ~first:false "tag_value" (Pbrt.Pp.pp_option Pbrt.Pp.pp_string) fmt v.tag_value;
     Pbrt.Pp.pp_record_field ~first:false "arg_value" (Pbrt.Pp.pp_option Pbrt.Pp.pp_string) fmt v.arg_value;
+    Pbrt.Pp.pp_record_field ~first:false "reply" (Pbrt.Pp.pp_option pp_reply) fmt v.reply;
   in
   Pbrt.Pp.pp_brk pp_i fmt ()
 
 let rec pp_commit fmt (v:commit) = 
   let pp_i fmt () =
-    Pbrt.Pp.pp_record_field ~first:true "session_id" Pbrt.Pp.pp_int32 fmt v.session_id;
+    Pbrt.Pp.pp_record_field ~first:true "session_id" Pbrt.Pp.pp_string fmt v.session_id;
     Pbrt.Pp.pp_record_field ~first:false "named_active" (Pbrt.Pp.pp_option Pbrt.Pp.pp_string) fmt v.named_active;
     Pbrt.Pp.pp_record_field ~first:false "named_proposed" (Pbrt.Pp.pp_option Pbrt.Pp.pp_string) fmt v.named_proposed;
     Pbrt.Pp.pp_record_field ~first:false "dry_run" Pbrt.Pp.pp_bool fmt v.dry_run;
@@ -131,23 +151,23 @@ let rec pp_commit fmt (v:commit) =
   in
   Pbrt.Pp.pp_brk pp_i fmt ()
 
-let rec pp_error fmt (v:error) =
-  match v with
-  | Success -> Format.fprintf fmt "Success"
-  | Config_error -> Format.fprintf fmt "Config_error"
-  | Daemon_error -> Format.fprintf fmt "Daemon_error"
-  | Background -> Format.fprintf fmt "Background"
-
-let rec pp_result fmt (v:result) = 
-  let pp_i fmt () =
-    Pbrt.Pp.pp_record_field ~first:true "error" pp_error fmt v.error;
-    Pbrt.Pp.pp_record_field ~first:false "out" Pbrt.Pp.pp_string fmt v.out;
-  in
-  Pbrt.Pp.pp_brk pp_i fmt ()
-
 [@@@ocaml.warning "-27-30-39"]
 
 (** {2 Protobuf Encoding} *)
+
+let rec encode_pb_error (v:error) encoder =
+  match v with
+  | Success -> Pbrt.Encoder.int_as_varint (0) encoder
+  | Config_error -> Pbrt.Encoder.int_as_varint 1 encoder
+  | Daemon_error -> Pbrt.Encoder.int_as_varint 2 encoder
+  | Background -> Pbrt.Encoder.int_as_varint 4 encoder
+
+let rec encode_pb_reply (v:reply) encoder = 
+  encode_pb_error v.error encoder;
+  Pbrt.Encoder.key 1 Pbrt.Varint encoder; 
+  Pbrt.Encoder.string v.out encoder;
+  Pbrt.Encoder.key 2 Pbrt.Bytes encoder; 
+  ()
 
 let rec encode_pb_call (v:call) encoder = 
   Pbrt.Encoder.string v.script_name encoder;
@@ -164,11 +184,17 @@ let rec encode_pb_call (v:call) encoder =
     Pbrt.Encoder.key 3 Pbrt.Bytes encoder; 
   | None -> ();
   end;
+  begin match v.reply with
+  | Some x -> 
+    Pbrt.Encoder.nested encode_pb_reply x encoder;
+    Pbrt.Encoder.key 4 Pbrt.Bytes encoder; 
+  | None -> ();
+  end;
   ()
 
 let rec encode_pb_commit (v:commit) encoder = 
-  Pbrt.Encoder.int32_as_varint v.session_id encoder;
-  Pbrt.Encoder.key 1 Pbrt.Varint encoder; 
+  Pbrt.Encoder.string v.session_id encoder;
+  Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
   begin match v.named_active with
   | Some x -> 
     Pbrt.Encoder.string x encoder;
@@ -193,23 +219,45 @@ let rec encode_pb_commit (v:commit) encoder =
   ) v.calls encoder;
   ()
 
-let rec encode_pb_error (v:error) encoder =
-  match v with
-  | Success -> Pbrt.Encoder.int_as_varint (0) encoder
-  | Config_error -> Pbrt.Encoder.int_as_varint 1 encoder
-  | Daemon_error -> Pbrt.Encoder.int_as_varint 2 encoder
-  | Background -> Pbrt.Encoder.int_as_varint 4 encoder
-
-let rec encode_pb_result (v:result) encoder = 
-  encode_pb_error v.error encoder;
-  Pbrt.Encoder.key 1 Pbrt.Varint encoder; 
-  Pbrt.Encoder.string v.out encoder;
-  Pbrt.Encoder.key 2 Pbrt.Bytes encoder; 
-  ()
-
 [@@@ocaml.warning "-27-30-39"]
 
 (** {2 Protobuf Decoding} *)
+
+let rec decode_pb_error d = 
+  match Pbrt.Decoder.int_as_varint d with
+  | 0 -> (Success:error)
+  | 1 -> (Config_error:error)
+  | 2 -> (Daemon_error:error)
+  | 4 -> (Background:error)
+  | _ -> Pbrt.Decoder.malformed_variant "error"
+
+let rec decode_pb_reply d =
+  let v = default_reply_mutable () in
+  let continue__= ref true in
+  let out_is_set = ref false in
+  let error_is_set = ref false in
+  while !continue__ do
+    match Pbrt.Decoder.key d with
+    | None -> (
+    ); continue__ := false
+    | Some (1, Pbrt.Varint) -> begin
+      v.error <- decode_pb_error d; error_is_set := true;
+    end
+    | Some (1, pk) -> 
+      Pbrt.Decoder.unexpected_payload "Message(reply), field(1)" pk
+    | Some (2, Pbrt.Bytes) -> begin
+      v.out <- Pbrt.Decoder.string d; out_is_set := true;
+    end
+    | Some (2, pk) -> 
+      Pbrt.Decoder.unexpected_payload "Message(reply), field(2)" pk
+    | Some (_, payload_kind) -> Pbrt.Decoder.skip d payload_kind
+  done;
+  begin if not !out_is_set then Pbrt.Decoder.missing_field "out" end;
+  begin if not !error_is_set then Pbrt.Decoder.missing_field "error" end;
+  ({
+    error = v.error;
+    out = v.out;
+  } : reply)
 
 let rec decode_pb_call d =
   let v = default_call_mutable () in
@@ -234,6 +282,11 @@ let rec decode_pb_call d =
     end
     | Some (3, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(call), field(3)" pk
+    | Some (4, Pbrt.Bytes) -> begin
+      v.reply <- Some (decode_pb_reply (Pbrt.Decoder.nested d));
+    end
+    | Some (4, pk) -> 
+      Pbrt.Decoder.unexpected_payload "Message(call), field(4)" pk
     | Some (_, payload_kind) -> Pbrt.Decoder.skip d payload_kind
   done;
   begin if not !script_name_is_set then Pbrt.Decoder.missing_field "script_name" end;
@@ -241,6 +294,7 @@ let rec decode_pb_call d =
     script_name = v.script_name;
     tag_value = v.tag_value;
     arg_value = v.arg_value;
+    reply = v.reply;
   } : call)
 
 let rec decode_pb_commit d =
@@ -255,8 +309,8 @@ let rec decode_pb_commit d =
     | None -> (
       v.calls <- List.rev v.calls;
     ); continue__ := false
-    | Some (1, Pbrt.Varint) -> begin
-      v.session_id <- Pbrt.Decoder.int32_as_varint d; session_id_is_set := true;
+    | Some (1, Pbrt.Bytes) -> begin
+      v.session_id <- Pbrt.Decoder.string d; session_id_is_set := true;
     end
     | Some (1, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(commit), field(1)" pk
@@ -305,39 +359,3 @@ let rec decode_pb_commit d =
     background = v.background;
     calls = v.calls;
   } : commit)
-
-let rec decode_pb_error d = 
-  match Pbrt.Decoder.int_as_varint d with
-  | 0 -> (Success:error)
-  | 1 -> (Config_error:error)
-  | 2 -> (Daemon_error:error)
-  | 4 -> (Background:error)
-  | _ -> Pbrt.Decoder.malformed_variant "error"
-
-let rec decode_pb_result d =
-  let v = default_result_mutable () in
-  let continue__= ref true in
-  let out_is_set = ref false in
-  let error_is_set = ref false in
-  while !continue__ do
-    match Pbrt.Decoder.key d with
-    | None -> (
-    ); continue__ := false
-    | Some (1, Pbrt.Varint) -> begin
-      v.error <- decode_pb_error d; error_is_set := true;
-    end
-    | Some (1, pk) -> 
-      Pbrt.Decoder.unexpected_payload "Message(result), field(1)" pk
-    | Some (2, Pbrt.Bytes) -> begin
-      v.out <- Pbrt.Decoder.string d; out_is_set := true;
-    end
-    | Some (2, pk) -> 
-      Pbrt.Decoder.unexpected_payload "Message(result), field(2)" pk
-    | Some (_, payload_kind) -> Pbrt.Decoder.skip d payload_kind
-  done;
-  begin if not !out_is_set then Pbrt.Decoder.missing_field "out" end;
-  begin if not !error_is_set then Pbrt.Decoder.missing_field "error" end;
-  ({
-    error = v.error;
-    out = v.out;
-  } : result)
