@@ -14,10 +14,10 @@ type t = {
     oc: Lwt_io.output Lwt_io.channel;
 }
 
-(* explicit translation between commit data and commit proto
+(* explicit translation between commit data and commit protobuf
  * to keep the commit data opaque to the Python commit daemon.
- * Mutability on the Python side updates the commit data with
- * results of script execution in reply field.
+ * Mutability on the Python side updates the (subset of) commit
+ * data with results of script execution in reply field.
  *)
 let node_data_to_call nd =
     { script_name = nd.script_name;
@@ -122,9 +122,7 @@ let test_commit at wt =
         let del_list, add_list =
             calculate_priority_lists rt at wt
         in
-(*        let node_list = del_list @ add_list in*)
         let commit_session =
             { default_commit_data with node_list = del_list @ add_list }
-(*            { default_commit with calls = List.map node_data_to_call node_list; }*)
         in
         do_commit commit_session
