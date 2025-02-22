@@ -4,14 +4,21 @@ module CD = Vyos1x.Config_diff
 module RT = Vyos1x.Reference_tree
 module FP = FilePath
 
+type tree_source = DELETE | ADD
+
+let tree_source_to_yojson = function
+    | DELETE -> `String "DELETE"
+    | ADD -> `String "ADD"
+
 type node_data = {
     script_name: string;
     priority: int;
     tag_value: string option;
     arg_value: string option;
     path: string list;
+    source: tree_source;
     out: string;
-} [@@deriving yojson]
+} [@@deriving to_yojson]
 
 
 let default_node_data = {
@@ -20,6 +27,7 @@ let default_node_data = {
     tag_value = None;
     arg_value = None;
     path = [];
+    source = ADD;
     out = "";
 }
 
@@ -31,7 +39,7 @@ type commit_data = {
     atomic: bool;
     background: bool;
     node_list: node_data list;
-} [@@deriving yojson]
+} [@@deriving to_yojson]
 
 let default_commit_data = {
     session_id = "";
@@ -77,7 +85,7 @@ let owner_args_from_data p o =
 let add_tag_instance cd cs tv =
     CS.add { cd with tag_value = Some tv; } cs
 
-let get_node_data rt ct (path, cs') t =
+let get_node_data rt ct src (path, cs') t =
     if Vyos1x.Util.is_empty path then
         (path, cs')
     else
@@ -105,7 +113,8 @@ let get_node_data rt ct (path, cs') t =
                    script_name = own;
                    priority = priority;
                    arg_value = arg;
-                   path = rpath; }
+                   path = rpath;
+                   source = src; }
     in
     let tag_values =
         match RT.is_tag rt rt_path with
@@ -118,8 +127,8 @@ let get_node_data rt ct (path, cs') t =
         | _ -> List.fold_left (add_tag_instance c_data) cs' tag_values
     in (path, cs)
 
-let get_commit_set rt ct =
-    snd (VT.fold_tree_with_path (get_node_data rt ct) ([], CS.empty) ct)
+let get_commit_set rt ct src =
+    snd (VT.fold_tree_with_path (get_node_data rt ct src) ([], CS.empty) ct)
 
 (* for initial consistency with the legacy ordering of delete and add
    queues, enforce the following subtlety: if a path in the delete tree is
@@ -143,15 +152,15 @@ let calculate_priority_lists rt at wt =
     let diff = CD.diff_tree [] at wt in
     let del_tree = CD.get_tagged_delete_tree diff in
     let add_tree = CT.get_subtree diff ["add"] in
-    let cs_del' = get_commit_set rt del_tree in
-    let cs_add' = get_commit_set rt add_tree in
+    let cs_del' = get_commit_set rt del_tree DELETE in
+    let cs_add' = get_commit_set rt add_tree ADD in
     let cs_del, cs_add = legacy_order del_tree cs_del' cs_add' in
     List.rev (CS.elements cs_del), CS.elements cs_add
-(*
-let commit_store _c_data =
+
+let commit_store c_data =
     print_endline "commit_store";
-    print_endline (session_data_to_yojson s_data |> Yojson.Safe.to_string)
-*)
+    print_endline (commit_data_to_yojson c_data |> Yojson.Safe.to_string)
+
 let show_commit_data at wt =
     let vc =
         Startup.load_daemon_config Defaults.defaults.config_file in
