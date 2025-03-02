@@ -11,7 +11,7 @@ type t = {
     fallback_config: string;
     reference_tree: string;
     running_cache: string;
-    working_cache: string;
+    session_cache: string;
     socket: string;
     pid_file: string;
     log_file: string option;
@@ -32,7 +32,7 @@ let empty_config = {
     fallback_config = "";
     reference_tree = "";
     running_cache = "";
-    working_cache = "";
+    session_cache = "";
     socket = "";
     pid_file = "";
     log_file = None;
@@ -75,7 +75,7 @@ let load filename =
             let conf = {conf with fallback_config = mandatory_field conf_toml "appliance" "fallback_config"} in
             let conf = {conf with reference_tree = mandatory_field conf_toml "appliance" "reference_tree"} in
             let conf = {conf with running_cache = mandatory_field conf_toml "appliance" "running_cache"} in
-            let conf = {conf with working_cache = mandatory_field conf_toml "appliance" "working_cache"} in
+            let conf = {conf with session_cache = mandatory_field conf_toml "appliance" "session_cache"} in
             (* Optional fields *)
             let conf = {conf with pid_file = optional_field defaults.pid_file conf_toml "vyconf" "pid_file"} in
             let conf = {conf with socket = optional_field defaults.socket conf_toml "vyconf" "socket"} in

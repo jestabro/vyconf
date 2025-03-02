@@ -112,7 +112,7 @@ let test_commit at wt =
     let () =
         IC.write_internal at (FP.concat vc.session_dir vc.running_cache) in
     let () =
-        IC.write_internal wt (FP.concat vc.session_dir vc.working_cache) in
+        IC.write_internal wt (FP.concat vc.session_dir vc.session_cache) in
     let rt_opt =
         ST.read_reference_tree (FP.concat vc.reftree_dir vc.reference_tree)
     in
