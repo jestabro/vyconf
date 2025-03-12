@@ -24,7 +24,7 @@
 
 (library
  (name vycall_message)
- (public_name vyconf.vycall_message)
+ (public_name vyconf.vycall-message)
  (modules vycall_pbt)
  (libraries ocaml-protoc))
 
