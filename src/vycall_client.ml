@@ -16,8 +16,8 @@ type t = {
 
 (* explicit translation between commit data and commit protobuf
  * to keep the commit data opaque to the Python commit daemon.
- * Mutability on the Python side updates the (subset of) commit
- * data with results of script execution in reply field.
+ * The commit daemon updates the (subset of) commit data with
+ * results of script execution in init/reply fields.
  *)
 let node_data_to_call nd =
     { script_name = nd.script_name;
@@ -26,10 +26,10 @@ let node_data_to_call nd =
       reply = None
     }
 
-let call_to_node_data ((c: call), nd) =
+let call_to_node_data ((c: call), (nd: node_data)) =
     match c.reply with
     | None -> nd
-    | Some r -> { nd with out = r.out; }
+    | Some r -> { nd with reply = Some { success = r.success; out = r.out }}
 
 let commit_data_to_commit_proto cd =
     { session_id = cd.session_id;
@@ -38,14 +38,18 @@ let commit_data_to_commit_proto cd =
       dry_run = cd.dry_run;
       atomic = cd.atomic;
       background = cd.background;
+      init = None;
       calls = List.map node_data_to_call cd.node_list;
     }
 
-let commit_proto_to_commit_data (c: commit) cd =
-    { cd with
-      node_list =
-          List.map call_to_node_data (List.combine c.calls cd.node_list);
-    }
+let commit_proto_to_commit_data (c: commit) (cd: commit_data) =
+    match c.init with
+    | None -> cd
+    | Some i ->
+        { cd with init = Some { success = i.success; out = i.out };
+          node_list =
+              List.map call_to_node_data (List.combine c.calls cd.node_list);
+        }
 
 (* read/write message from/to socket *)
 let call_write oc msg =
@@ -93,7 +97,7 @@ let do_commit session_data =
         let sockfile = "/run/vyos-commitd.sock" in
         let%lwt client = create sockfile in
         let%lwt resp = do_call client session in
-        let func s =
+        let func (s: call) =
             match s.reply with
             | None -> Lwt_io.write Lwt_io.stdout "none"
             | Some r ->  Lwt_io.write Lwt_io.stdout r.out

@@ -10,6 +10,11 @@ let tree_source_to_yojson = function
     | DELETE -> `String "DELETE"
     | ADD -> `String "ADD"
 
+type status = {
+  success : bool;
+  out : string;
+} [@@deriving to_yojson]
+
 type node_data = {
     script_name: string;
     priority: int;
@@ -17,9 +22,8 @@ type node_data = {
     arg_value: string option;
     path: string list;
     source: tree_source;
-    out: string;
+    reply: status option;
 } [@@deriving to_yojson]
-
 
 let default_node_data = {
     script_name = "";
@@ -28,7 +32,7 @@ let default_node_data = {
     arg_value = None;
     path = [];
     source = ADD;
-    out = "";
+    reply = Some { success = false; out = ""; };
 }
 
 type commit_data = {
@@ -38,6 +42,7 @@ type commit_data = {
     dry_run: bool;
     atomic: bool;
     background: bool;
+    init: status option;
     node_list: node_data list;
 } [@@deriving to_yojson]
 
@@ -48,6 +53,7 @@ let default_commit_data = {
     dry_run = false;
     atomic = false;
     background = false;
+    init = Some { success = false; out = ""; };
     node_list = [];
 }
 

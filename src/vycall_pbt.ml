@@ -1,13 +1,7 @@
 [@@@ocaml.warning "-27-30-39-44"]
 
-type error =
-  | Success 
-  | Config_error 
-  | Daemon_error 
-  | Background 
-
-type reply = {
-  error : error;
+type status = {
+  success : bool;
   out : string;
 }
 
@@ -15,7 +9,7 @@ type call = {
   script_name : string;
   tag_value : string option;
   arg_value : string option;
-  reply : reply option;
+  reply : status option;
 }
 
 type commit = {
@@ -25,16 +19,15 @@ type commit = {
   dry_run : bool;
   atomic : bool;
   background : bool;
+  init : status option;
   calls : call list;
 }
 
-let rec default_error () = (Success:error)
-
-let rec default_reply 
-  ?error:((error:error) = default_error ())
+let rec default_status 
+  ?success:((success:bool) = false)
   ?out:((out:string) = "")
-  () : reply  = {
-  error;
+  () : status  = {
+  success;
   out;
 }
 
@@ -42,7 +35,7 @@ let rec default_call
   ?script_name:((script_name:string) = "")
   ?tag_value:((tag_value:string option) = None)
   ?arg_value:((arg_value:string option) = None)
-  ?reply:((reply:reply option) = None)
+  ?reply:((reply:status option) = None)
   () : call  = {
   script_name;
   tag_value;
@@ -57,6 +50,7 @@ let rec default_commit
   ?dry_run:((dry_run:bool) = false)
   ?atomic:((atomic:bool) = false)
   ?background:((background:bool) = false)
+  ?init:((init:status option) = None)
   ?calls:((calls:call list) = [])
   () : commit  = {
   session_id;
@@ -65,16 +59,17 @@ let rec default_commit
   dry_run;
   atomic;
   background;
+  init;
   calls;
 }
 
-type reply_mutable = {
-  mutable error : error;
+type status_mutable = {
+  mutable success : bool;
   mutable out : string;
 }
 
-let default_reply_mutable () : reply_mutable = {
-  error = default_error ();
+let default_status_mutable () : status_mutable = {
+  success = false;
   out = "";
 }
 
@@ -82,7 +77,7 @@ type call_mutable = {
   mutable script_name : string;
   mutable tag_value : string option;
   mutable arg_value : string option;
-  mutable reply : reply option;
+  mutable reply : status option;
 }
 
 let default_call_mutable () : call_mutable = {
@@ -99,6 +94,7 @@ type commit_mutable = {
   mutable dry_run : bool;
   mutable atomic : bool;
   mutable background : bool;
+  mutable init : status option;
   mutable calls : call list;
 }
 
@@ -109,6 +105,7 @@ let default_commit_mutable () : commit_mutable = {
   dry_run = false;
   atomic = false;
   background = false;
+  init = None;
   calls = [];
 }
 
@@ -116,16 +113,9 @@ let default_commit_mutable () : commit_mutable = {
 
 (** {2 Formatters} *)
 
-let rec pp_error fmt (v:error) =
-  match v with
-  | Success -> Format.fprintf fmt "Success"
-  | Config_error -> Format.fprintf fmt "Config_error"
-  | Daemon_error -> Format.fprintf fmt "Daemon_error"
-  | Background -> Format.fprintf fmt "Background"
-
-let rec pp_reply fmt (v:reply) = 
+let rec pp_status fmt (v:status) = 
   let pp_i fmt () =
-    Pbrt.Pp.pp_record_field ~first:true "error" pp_error fmt v.error;
+    Pbrt.Pp.pp_record_field ~first:true "success" Pbrt.Pp.pp_bool fmt v.success;
     Pbrt.Pp.pp_record_field ~first:false "out" Pbrt.Pp.pp_string fmt v.out;
   in
   Pbrt.Pp.pp_brk pp_i fmt ()
@@ -135,7 +125,7 @@ let rec pp_call fmt (v:call) =
     Pbrt.Pp.pp_record_field ~first:true "script_name" Pbrt.Pp.pp_string fmt v.script_name;
     Pbrt.Pp.pp_record_field ~first:false "tag_value" (Pbrt.Pp.pp_option Pbrt.Pp.pp_string) fmt v.tag_value;
     Pbrt.Pp.pp_record_field ~first:false "arg_value" (Pbrt.Pp.pp_option Pbrt.Pp.pp_string) fmt v.arg_value;
-    Pbrt.Pp.pp_record_field ~first:false "reply" (Pbrt.Pp.pp_option pp_reply) fmt v.reply;
+    Pbrt.Pp.pp_record_field ~first:false "reply" (Pbrt.Pp.pp_option pp_status) fmt v.reply;
   in
   Pbrt.Pp.pp_brk pp_i fmt ()
 
@@ -147,6 +137,7 @@ let rec pp_commit fmt (v:commit) =
     Pbrt.Pp.pp_record_field ~first:false "dry_run" Pbrt.Pp.pp_bool fmt v.dry_run;
     Pbrt.Pp.pp_record_field ~first:false "atomic" Pbrt.Pp.pp_bool fmt v.atomic;
     Pbrt.Pp.pp_record_field ~first:false "background" Pbrt.Pp.pp_bool fmt v.background;
+    Pbrt.Pp.pp_record_field ~first:false "init" (Pbrt.Pp.pp_option pp_status) fmt v.init;
     Pbrt.Pp.pp_record_field ~first:false "calls" (Pbrt.Pp.pp_list pp_call) fmt v.calls;
   in
   Pbrt.Pp.pp_brk pp_i fmt ()
@@ -155,15 +146,8 @@ let rec pp_commit fmt (v:commit) =
 
 (** {2 Protobuf Encoding} *)
 
-let rec encode_pb_error (v:error) encoder =
-  match v with
-  | Success -> Pbrt.Encoder.int_as_varint (0) encoder
-  | Config_error -> Pbrt.Encoder.int_as_varint 1 encoder
-  | Daemon_error -> Pbrt.Encoder.int_as_varint 2 encoder
-  | Background -> Pbrt.Encoder.int_as_varint 4 encoder
-
-let rec encode_pb_reply (v:reply) encoder = 
-  encode_pb_error v.error encoder;
+let rec encode_pb_status (v:status) encoder = 
+  Pbrt.Encoder.bool v.success encoder;
   Pbrt.Encoder.key 1 Pbrt.Varint encoder; 
   Pbrt.Encoder.string v.out encoder;
   Pbrt.Encoder.key 2 Pbrt.Bytes encoder; 
@@ -186,7 +170,7 @@ let rec encode_pb_call (v:call) encoder =
   end;
   begin match v.reply with
   | Some x -> 
-    Pbrt.Encoder.nested encode_pb_reply x encoder;
+    Pbrt.Encoder.nested encode_pb_status x encoder;
     Pbrt.Encoder.key 4 Pbrt.Bytes encoder; 
   | None -> ();
   end;
@@ -213,9 +197,15 @@ let rec encode_pb_commit (v:commit) encoder =
   Pbrt.Encoder.key 5 Pbrt.Varint encoder; 
   Pbrt.Encoder.bool v.background encoder;
   Pbrt.Encoder.key 6 Pbrt.Varint encoder; 
+  begin match v.init with
+  | Some x -> 
+    Pbrt.Encoder.nested encode_pb_status x encoder;
+    Pbrt.Encoder.key 7 Pbrt.Bytes encoder; 
+  | None -> ();
+  end;
   Pbrt.List_util.rev_iter_with (fun x encoder -> 
     Pbrt.Encoder.nested encode_pb_call x encoder;
-    Pbrt.Encoder.key 7 Pbrt.Bytes encoder; 
+    Pbrt.Encoder.key 8 Pbrt.Bytes encoder; 
   ) v.calls encoder;
   ()
 
@@ -223,41 +213,33 @@ let rec encode_pb_commit (v:commit) encoder =
 
 (** {2 Protobuf Decoding} *)
 
-let rec decode_pb_error d = 
-  match Pbrt.Decoder.int_as_varint d with
-  | 0 -> (Success:error)
-  | 1 -> (Config_error:error)
-  | 2 -> (Daemon_error:error)
-  | 4 -> (Background:error)
-  | _ -> Pbrt.Decoder.malformed_variant "error"
-
-let rec decode_pb_reply d =
-  let v = default_reply_mutable () in
+let rec decode_pb_status d =
+  let v = default_status_mutable () in
   let continue__= ref true in
   let out_is_set = ref false in
-  let error_is_set = ref false in
+  let success_is_set = ref false in
   while !continue__ do
     match Pbrt.Decoder.key d with
     | None -> (
     ); continue__ := false
     | Some (1, Pbrt.Varint) -> begin
-      v.error <- decode_pb_error d; error_is_set := true;
+      v.success <- Pbrt.Decoder.bool d; success_is_set := true;
     end
     | Some (1, pk) -> 
-      Pbrt.Decoder.unexpected_payload "Message(reply), field(1)" pk
+      Pbrt.Decoder.unexpected_payload "Message(status), field(1)" pk
     | Some (2, Pbrt.Bytes) -> begin
       v.out <- Pbrt.Decoder.string d; out_is_set := true;
     end
     | Some (2, pk) -> 
-      Pbrt.Decoder.unexpected_payload "Message(reply), field(2)" pk
+      Pbrt.Decoder.unexpected_payload "Message(status), field(2)" pk
     | Some (_, payload_kind) -> Pbrt.Decoder.skip d payload_kind
   done;
   begin if not !out_is_set then Pbrt.Decoder.missing_field "out" end;
-  begin if not !error_is_set then Pbrt.Decoder.missing_field "error" end;
+  begin if not !success_is_set then Pbrt.Decoder.missing_field "success" end;
   ({
-    error = v.error;
+    success = v.success;
     out = v.out;
-  } : reply)
+  } : status)
 
 let rec decode_pb_call d =
   let v = default_call_mutable () in
@@ -283,7 +265,7 @@ let rec decode_pb_call d =
     | Some (3, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(call), field(3)" pk
     | Some (4, Pbrt.Bytes) -> begin
-      v.reply <- Some (decode_pb_reply (Pbrt.Decoder.nested d));
+      v.reply <- Some (decode_pb_status (Pbrt.Decoder.nested d));
     end
     | Some (4, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(call), field(4)" pk
@@ -340,10 +322,15 @@ let rec decode_pb_commit d =
     | Some (6, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(commit), field(6)" pk
     | Some (7, Pbrt.Bytes) -> begin
-      v.calls <- (decode_pb_call (Pbrt.Decoder.nested d)) :: v.calls;
+      v.init <- Some (decode_pb_status (Pbrt.Decoder.nested d));
     end
     | Some (7, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(commit), field(7)" pk
+    | Some (8, Pbrt.Bytes) -> begin
+      v.calls <- (decode_pb_call (Pbrt.Decoder.nested d)) :: v.calls;
+    end
+    | Some (8, pk) -> 
+      Pbrt.Decoder.unexpected_payload "Message(commit), field(8)" pk
     | Some (_, payload_kind) -> Pbrt.Decoder.skip d payload_kind
   done;
   begin if not !background_is_set then Pbrt.Decoder.missing_field "background" end;
@@ -357,5 +344,6 @@ let rec decode_pb_commit d =
     dry_run = v.dry_run;
     atomic = v.atomic;
     background = v.background;
+    init = v.init;
     calls = v.calls;
   } : commit)

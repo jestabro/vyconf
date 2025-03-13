@@ -1,5 +1,10 @@
 type tree_source = DELETE | ADD
 
+type status = {
+  success : bool;
+  out : string;
+}
+
 type node_data = {
     script_name: string;
     priority: int;
@@ -7,7 +12,7 @@ type node_data = {
     arg_value: string option;
     path: string list;
     source: tree_source;
-    out: string;
+    reply: status option;
 } [@@deriving to_yojson]
 
 type commit_data = {
@@ -17,6 +22,7 @@ type commit_data = {
     dry_run: bool;
     atomic: bool;
     background: bool;
+    init: status option;
     node_list: node_data list;
 } [@@deriving to_yojson]
 

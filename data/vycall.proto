@@ -1,12 +1,5 @@
-enum Error {
-    SUCCESS = 0;
-    CONFIG_ERROR = 1;
-    DAEMON_ERROR = 2;
-    BACKGROUND = 4;
-}
-
-message Reply {
-    required Error error = 1;
+message Status {
+    required bool success = 1;
     required string out = 2;
 }
 
@@ -14,7 +7,7 @@ message Call {
     required string script_name = 1;
     optional string tag_value = 2;
     optional string arg_value = 3;
-    optional Reply reply = 4;
+    optional Status reply = 4;
 }
 
 message Commit {
@@ -29,6 +22,6 @@ message Commit {
     required bool atomic = 5;
     required bool background = 6;
 
-    optional Reply session_reply = 7;
+    optional Status init = 7;
     repeated Call calls = 8;
 }
