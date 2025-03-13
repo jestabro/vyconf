@@ -29,5 +29,6 @@ message Commit {
     required bool atomic = 5;
     required bool background = 6;
 
-    repeated Call calls = 7;
+    optional Reply session_reply = 7;
+    repeated Call calls = 8;
 }
