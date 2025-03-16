@@ -97,14 +97,6 @@ let do_commit session_data =
         let sockfile = "/run/vyos-commitd.sock" in
         let%lwt client = create sockfile in
         let%lwt resp = do_call client session in
-        let func (s: call) =
-            match s.reply with
-            | None -> Lwt_io.write Lwt_io.stdout "none"
-            | Some r ->  Lwt_io.write Lwt_io.stdout r.out
-        in
-        let%lwt () =
-            Lwt_list.iter_s func resp.calls in
-        let%lwt () = Lwt_io.flush Lwt_io.stdout in
         let%lwt () = Lwt_io.close client.oc in
         update (commit_proto_to_commit_data resp session_data)
     in Lwt_main.run @@ run ()

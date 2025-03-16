@@ -164,8 +164,16 @@ let calculate_priority_lists rt at wt =
     List.rev (CS.elements cs_del), CS.elements cs_add
 
 let commit_store c_data =
-    print_endline "commit_store";
-    print_endline (commit_data_to_yojson c_data |> Yojson.Safe.to_string)
+    let out =
+        let func acc nd =
+            match nd.reply with
+            | None -> acc ^ "\n"
+            | Some r ->
+                match r.success with
+                | true -> acc ^ "\n"
+                | false -> acc ^ "\n" ^ r.out
+        in List.fold_left func "" c_data.node_list
+    in print_endline out
 
 let show_commit_data at wt =
     let vc =
