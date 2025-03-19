@@ -88,6 +88,11 @@ let delete w s path =
     let config = apply_cfg_op op s.proposed_config in
     {s with proposed_config=config; changeset=(op :: s.changeset)}
 
+let commit w s path =
+    let commit_data = {Commit.default_commit_data with session_id = s.token } in
+    let confirmed = do_commit commit_data in
+    {s with confirmed_config = confirmed;}
+
 let get_value w s path =
     if not (VT.exists s.proposed_config path) then
         raise (Session_error ("Config path does not exist"))

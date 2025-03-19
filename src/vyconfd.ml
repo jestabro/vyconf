@@ -144,6 +144,12 @@ let validate world token (req: request_validate) =
         response_tmpl
     with Session.Session_error msg -> {response_tmpl with status=Fail; error=(Some msg)}
 
+let commit world token (req: request_commit) =
+    try
+        let msg_str = Session.commit world (find_session token) req in
+        {response_tmpl with output=(Some msg_str)}
+    with Session.Session_error msg -> {response_tmpl with status=Fail; error=(Some msg)}
+
 let reload_reftree world (_req: request_reload_reftree) =
     let config = world.Session.vyconf_config in
     let reftree =
