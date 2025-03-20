@@ -88,8 +88,8 @@ let delete w s path =
     let config = apply_cfg_op op s.proposed_config in
     {s with proposed_config=config; changeset=(op :: s.changeset)}
 
-let commit w s path =
-    let commit_data = {Commit.default_commit_data with session_id = s.token } in
+let commit w s =
+    let commit_data = Commit.make_commit_data w s in
     let confirmed = do_commit commit_data in
     {s with confirmed_config = confirmed;}
 

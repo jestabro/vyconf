@@ -37,8 +37,7 @@ let default_node_data = {
 
 type commit_data = {
     session_id: string;
-    named_active : string option;
-    named_proposed : string option;
+    config_diff: CD.config_diff;
     dry_run: bool;
     atomic: bool;
     background: bool;
@@ -48,14 +47,20 @@ type commit_data = {
 
 let default_commit_data = {
     session_id = "";
-    named_active = None;
-    named_proposed = None;
+    config_diff = CT.default;
     dry_run = false;
     atomic = false;
     background = false;
     init = Some { success = false; out = ""; };
     node_list = [];
 }
+
+let make_commit_data at wt id =
+    let diff = CD.diff_tree [] at wt in
+    { default_commit_data with
+      session_id = id;
+      config_diff = diff;
+      node_list = []; }
 
 let lex_order c1 c2 =
     let c = Vyos1x.Util.lex_order c1.path c2.path in
@@ -155,7 +160,6 @@ let legacy_order del_t a b =
     CS.fold shift a (a, b)
 
 let calculate_priority_lists rt diff =
-(*    let diff = CD.diff_tree [] at wt in *)
     let del_tree = CD.get_tagged_delete_tree diff in
     let add_tree = CT.get_subtree diff ["add"] in
     let cs_del' = get_commit_set rt del_tree DELETE in

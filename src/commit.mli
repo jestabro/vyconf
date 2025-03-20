@@ -17,8 +17,7 @@ type node_data = {
 
 type commit_data = {
     session_id: string;
-    named_active : string option;
-    named_proposed : string option;
+    config_diff: CD.config_diff;
     dry_run: bool;
     atomic: bool;
     background: bool;
