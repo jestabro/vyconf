@@ -17,7 +17,8 @@ type node_data = {
 
 type commit_data = {
     session_id: string;
-    config_diff: CD.config_diff;
+    config_diff: Vyos1x.Config_tree.t;
+    config_result: Vyos1x.Config_tree.t;
     dry_run: bool;
     atomic: bool;
     background: bool;
@@ -31,6 +32,8 @@ val default_node_data : node_data
 
 val default_commit_data : commit_data
 
-val calculate_priority_lists : Vyos1x.Reference_tree.t -> Vyos1x.Config_tree.t -> Vyos1x.Config_tree.t -> node_data list * node_data list
+val make_commit_data : Vyos1x.Config_tree.t -> Vyos1x.Config_tree.t -> string -> commit_data
+
+val calculate_priority_lists : Vyos1x.Reference_tree.t -> Vyos1x.Config_tree.t -> node_data list * node_data list
 
 val commit_store : commit_data -> unit
