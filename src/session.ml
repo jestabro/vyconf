@@ -90,12 +90,11 @@ let delete w s path =
     let config = apply_cfg_op op s.proposed_config in
     {s with proposed_config=config; changeset=(op :: s.changeset)}
 
-let commit w s =
-    let id = s.session_id in
+let commit w s t =
     let at = w.running_config in
     let wt = s.proposed_config in
     let rt = w.reference_tree in
-    let commit_data = CC.make_commit_data rt at wt id in
+    let commit_data = CC.make_commit_data rt at wt t in
     let received_commit_data = VC.do_commit commit_data in
     let result_commit_data =
         try
