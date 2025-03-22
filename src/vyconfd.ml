@@ -144,10 +144,12 @@ let validate world token (req: request_validate) =
         response_tmpl
     with Session.Session_error msg -> {response_tmpl with status=Fail; error=(Some msg)}
 
-let commit world token (req: request_commit) =
+let commit world token (_req: request_commit) =
     try
-        let msg_str = Session.commit world (find_session token) req in
-        {response_tmpl with output=(Some msg_str)}
+        let success, msg_str = Session.commit world (find_session token) token in
+        match success with
+        | true -> {response_tmpl with status=Success; output=(Some msg_str)}
+        | false -> {response_tmpl with status=Fail; output=(Some msg_str)}
     with Session.Session_error msg ->
         {response_tmpl with status=Internal_error; error=(Some msg)}
 

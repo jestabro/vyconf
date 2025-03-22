@@ -2,7 +2,7 @@ module CT = Vyos1x.Config_tree
 module VT = Vyos1x.Vytree
 module RT = Vyos1x.Reference_tree
 module CC = Commitd_client.Commit
-module CV = Commitd_client.Vycall_client
+module VC = Commitd_client.Vycall_client
 module D = Directories
 
 exception Session_error of string
@@ -102,7 +102,8 @@ let commit w s t =
         with CC.Commit_error e ->
             raise (Session_error (Printf.sprintf "Commit error: %s" e))
     in
-    w.running_config <- result_commit_data.config_result
+    w.running_config <- result_commit_data.config_result;
+    result_commit_data.result.success, result_commit_data.result.out
 
 let get_value w s path =
     if not (VT.exists s.proposed_config path) then

@@ -32,7 +32,7 @@ val set : world -> session_data -> string list -> session_data
 
 val delete : world -> session_data -> string list -> session_data
 
-val commit : world -> session_data -> unit
+val commit : world -> session_data -> string -> bool * string
 
 val get_value : world -> session_data -> string list -> string
 

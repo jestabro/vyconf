@@ -39,24 +39,26 @@ let default_node_data = {
 
 type commit_data = {
     session_id: string;
-    config_diff: CT.t;
-    config_result: CT.t;
     dry_run: bool;
     atomic: bool;
     background: bool;
     init: status option;
     node_list: node_data list;
+    config_diff: CT.t;
+    config_result: CT.t;
+    result : status;
 } [@@deriving to_yojson]
 
 let default_commit_data = {
     session_id = "";
-    config_diff = CT.default;
-    config_result = CT.default;
     dry_run = false;
     atomic = false;
     background = false;
     init = None;
     node_list = [];
+    config_diff = CT.default;
+    config_result = CT.default;
+    result = { success = true; out = ""; };
 }
 
 let lex_order c1 c2 =
@@ -190,19 +192,38 @@ let config_tree_update c_data n_data =
         let add = CT.get_subtree c_data.config_diff ["add"] in
         let add_tree = CD.clone add (CT.default) n_data.path in
         let config = CD.tree_union c_data.config_result add_tree in
-        { c_data with config_result = config }
+        let result =
+            { success = c_data.result.success && true;
+              out = c_data.result.out ^ r.out; }
+        in
+        { c_data with config_result = config; result = result; }
     | false, DELETE ->
         let del = CT.get_subtree c_data.config_diff ["del"] in
         let add_tree = CD.clone del (CT.default) n_data.path in
         let config = CD.tree_union c_data.config_result add_tree in
-        { c_data with config_result = config }
-    | _ -> c_data
+        let result =
+            { success = c_data.result.success && false;
+              out = c_data.result.out ^ r.out; }
+        in
+        { c_data with config_result = config; result = result; }
+    | true, DELETE ->
+        let result =
+            { success = c_data.result.success && true;
+              out = c_data.result.out ^ r.out; }
+        in
+        { c_data with result = result; }
+    | false, ADD ->
+        let result =
+            { success = c_data.result.success && false;
+              out = c_data.result.out ^ r.out; }
+        in
+        { c_data with result = result; }
+
 
 let commit_update c_data =
     match c_data.init with
     | None -> raise (Commit_error "commitd failure: no init status provided")
     | Some _ ->
-        out = c_data.init.out;
         let func acc_data nd =
             match nd.reply with
             | None -> raise (Commit_error "commitd failure: no reply status provided")
