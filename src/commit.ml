@@ -181,9 +181,9 @@ let commit_store c_data =
 (* The base config_result is the intersection of running and proposed
    configs:
        on success, added paths are added; deleted paths are ignored
-       on failure, deleted paths are added back in, added ignored
+       on failure, deleted paths are added back in, added paths ignored
  *)
-let config_tree_update c_data n_data =
+let config_result_update c_data n_data =
     match n_data.reply with
     | None -> c_data (* already exluded in calling function *)
     | Some r ->
@@ -227,7 +227,7 @@ let commit_update c_data =
         let func acc_data nd =
             match nd.reply with
             | None -> raise (Commit_error "commitd failure: no reply status provided")
-            | Some _ -> config_tree_update acc_data nd
+            | Some _ -> config_result_update acc_data nd
     in List.fold_left func c_data c_data.node_list
 
 let make_commit_data rt at wt id =
