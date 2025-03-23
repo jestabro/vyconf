@@ -100,7 +100,7 @@ let commit w s t =
         try
             CC.commit_update received_commit_data
         with CC.Commit_error e ->
-            raise (Session_error (Printf.sprintf "Commit error: %s" e))
+            raise (Session_error (Printf.sprintf "Commit internal error: %s" e))
     in
     w.running_config <- result_commit_data.config_result;
     result_commit_data.result.success, result_commit_data.result.out

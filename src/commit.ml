@@ -191,7 +191,7 @@ let config_result_update c_data n_data =
     | true, ADD ->
         let add = CT.get_subtree c_data.config_diff ["add"] in
         let add_tree = CD.clone add (CT.default) n_data.path in
-        let config = CD.tree_union c_data.config_result add_tree in
+        let config = CD.tree_union add_tree c_data.config_result in
         let result =
             { success = c_data.result.success && true;
               out = c_data.result.out ^ r.out; }
@@ -200,7 +200,7 @@ let config_result_update c_data n_data =
     | false, DELETE ->
         let del = CT.get_subtree c_data.config_diff ["del"] in
         let add_tree = CD.clone del (CT.default) n_data.path in
-        let config = CD.tree_union c_data.config_result add_tree in
+        let config = CD.tree_union add_tree c_data.config_result in
         let result =
             { success = c_data.result.success && false;
               out = c_data.result.out ^ r.out; }
