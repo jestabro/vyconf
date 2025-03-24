@@ -152,7 +152,7 @@ let set world token (req: request_set) =
         response_tmpl
     with Session.Session_error msg -> {response_tmpl with status=Fail; error=(Some msg)}
 
-let delete world token (req: request_set) =
+let delete world token (req: request_delete) =
     try
         let () = (Lwt_log.debug @@ Printf.sprintf "[%s]\n" (Vyos1x.Util.string_of_list req.path)) |> Lwt.ignore_result in
         let session = Session.delete world (find_session token) req.path in
@@ -215,6 +215,9 @@ let rec handle_connection world ic oc () =
                     | Some t, List_children r -> list_children world t r
                     | Some t, Show_config r -> show_config world t r
                     | Some t, Validate r -> validate world t r
+                    | Some t, Set r -> set world t r
+                    | Some t, Delete r -> delete world t r
+                    | Some t, Commit r -> commit world t r
                     | _ -> failwith "Unimplemented"
                 end) |> Lwt.return
         in
