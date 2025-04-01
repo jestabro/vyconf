@@ -18,12 +18,12 @@
  (public_name vyconf.vycall-client)
  (modules vycall_client commit)
  (libraries vyos1x-config vycall_message lwt lwt.unix lwt_log lwt_ppx ocplib-endian)
- (preprocess (pps lwt_ppx)))
+ (preprocess (pps lwt_ppx ppx_deriving_yojson)))
 
 (library
  (name vyconfd_config)
  (public_name vyconf.vyconfd-config)
- (modules vyconf_config startup session directories defaults)
+ (modules vyconf_config startup session directories defaults diagnose)
  (libraries vyos1x-config vyconf_connect commitd_client toml sha ppx_deriving.show yojson ppx_deriving_yojson)
  (preprocess (pps lwt_ppx ppx_deriving.show ppx_deriving_yojson)))
 
