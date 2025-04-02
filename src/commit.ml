@@ -167,7 +167,17 @@ let calculate_priority_lists rt diff =
     let cs_del' = get_commit_set rt del_tree DELETE in
     let cs_add' = get_commit_set rt add_tree ADD in
     let cs_del, cs_add = legacy_order del_tree cs_del' cs_add' in
-    List.rev (CS.elements cs_del), CS.elements cs_add
+    let del_list, add_list =
+        List.rev (CS.elements cs_del), CS.elements cs_add
+    in
+        let sprint_node_data acc s =
+            acc ^ "\n" ^ (node_data_to_yojson s |> Yojson.Safe.to_string)
+        in
+        let del_out = List.fold_left sprint_node_data "" del_list in
+        let add_out = List.fold_left sprint_node_data "" add_list in
+        print_endline ("JSE view from calculate_: " ^ del_out ^ "\n" ^ add_out);
+    del_list, add_list
+(*    List.rev (CS.elements cs_del), CS.elements cs_add*)
 
 let commit_store c_data =
     let out =

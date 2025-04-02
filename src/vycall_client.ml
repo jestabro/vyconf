@@ -85,6 +85,11 @@ let create sockfile =
     Lwt.return { ic=ic; oc=oc; }
 
 let do_commit commit_data =
+    let dummy = {default_commit_data with node_list=commit_data.node_list}
+    in
+    let out' = commit_data_to_yojson dummy |> Yojson.Safe.to_string in
+    let out = "JSE view from do_commit: " ^ out'
+    in print_endline out;
     let session = commit_data_to_commit_proto commit_data in
     let sockfile = "/run/vyos-commitd.sock" in
     let%lwt client = create sockfile in
