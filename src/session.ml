@@ -79,6 +79,8 @@ let set w s path =
     let value_behaviour = if RT.is_multi w.reference_tree refpath then CT.AddValue else CT.ReplaceValue in
     let op = CfgSet (path, value, value_behaviour) in
     let config = apply_cfg_op op s.proposed_config in
+    let config = RT.set_tag_data w.reference_tree config path in
+    let config = RT.set_leaf_data w.reference_tree config path in
     {s with proposed_config=config; changeset=(op :: s.changeset)}
 
 let delete w s path =
