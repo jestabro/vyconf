@@ -171,6 +171,13 @@ let load world token (req: request_load) =
         response_tmpl
     with Session.Session_error msg -> {response_tmpl with status=Fail; error=(Some msg)}
 
+let save world token (req: request_load) =
+    try
+        let _ = Session.save world (find_session token) req.location
+        in
+        response_tmpl
+    with Session.Session_error msg -> {response_tmpl with status=Fail; error=(Some msg)}
+
 let commit world token (req: request_commit) =
     let s = find_session token in
     let at = world.Session.running_config in

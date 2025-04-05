@@ -98,6 +98,13 @@ let load _w s file =
     | Error e -> raise (Session_error (Printf.sprintf "Error loading config: %s" e))
     | Ok conf -> {s with proposed_config=conf;}
 
+let save w s file =
+    let ct = w.running_config in
+    let res = Vyos1x.Config_file.save_config ct file in
+    match res with
+    | Error e -> raise (Session_error (Printf.sprintf "Error saving config: %s" e))
+    | Ok () -> s
+
 let get_value w s path =
     if not (VT.exists s.proposed_config path) then
         raise (Session_error ("Config path does not exist"))
