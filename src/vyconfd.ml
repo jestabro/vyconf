@@ -45,18 +45,31 @@ let usage = "Usage: " ^ Sys.argv.(0) ^ " [options]"
 
 let response_tmpl = {status=Success; output=None; error=None; warning=None}
 
+let find_session token = Hashtbl.find sessions token
+
+let find_session_by_pid pid =
+    let find_k k v acc =
+        if v.Session.client_pid = pid then
+            Some k
+        else acc
+    in
+    Hashtbl.fold find_k sessions None
+
 let make_session_token () =
     Sha1.string (string_of_int (Random.bits ())) |> Sha1.to_hex
 
-let setup_session world req =
+let setup_session world (req: request_setup_session) =
+    let pid = req.client_pid in
+    let extant = find_session_by_pid pid in
+    match extant with
+    | Some token ->
+        {response_tmpl with output=(Some token)}
+    | None ->
     let token = make_session_token () in
     let user = "unknown user" in
-    let pid = req.client_pid in
     let client_app = Option.value req.client_application ~default:"unknown client" in
     let () = Hashtbl.add sessions token (Session.make world client_app user pid) in
     {response_tmpl with output=(Some token)}
-
-let find_session token = Hashtbl.find sessions token
 
 let enter_conf_mode req token =
     let open Session in
