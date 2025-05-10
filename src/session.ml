@@ -160,6 +160,25 @@ let prepare_commit ?(dry_run=false) w s id =
     in
     CC.make_commit_data ~dry_run:dry_run rt at wt id
 
+let get_config w s id =
+    let at = w.running_config in
+    let wt = s.proposed_config in
+    let vc = w.vyconf_config in
+    let running_cache = Printf.sprintf "%s_%d" vc.running_cache id in
+    let session_cache = Printf.sprintf "%s_%d" vc.session_cache id in
+    let () =
+        try
+            IC.write_internal at (FP.concat vc.session_dir running_cache)
+        with
+            Vyos1x.Internal.Write_error msg -> raise (Session_error msg)
+    in
+    let () =
+        try
+            IC.write_internal wt (FP.concat vc.session_dir session_cache)
+        with
+            Vyos1x.Internal.Write_error msg -> raise (Session_error msg)
+    in Int32.to_string id
+
 let get_value w s path =
     if not (VT.exists s.proposed_config path) then
         raise (Session_error ("Config path does not exist"))
