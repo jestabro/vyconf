@@ -194,7 +194,7 @@ let config_result_update c_data n_data =
         in
         { c_data with config_result = config; result = result; }
     | false, DELETE ->
-        let del = CT.get_subtree c_data.config_diff ["del"] in
+        let del = CT.get_subtree c_data.config_diff ["sub"] in
         let path =
             match n_data.tag_value with
             | None -> n_data.path
