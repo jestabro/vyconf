@@ -244,13 +244,24 @@ let commit world token (req: request_commit) =
 
     let commit_data = Session.prepare_commit ~dry_run:req_dry_run world s token
     in
+    let rec print_node_list l =
+        match l with
+        | [] -> ""
+        | [x] -> Printf.sprintf "%s\n" (CC.node_data_to_yojson x |> Yojson.Safe.to_string)
+        | x :: xs ->
+            Printf.sprintf "%s; " (CC.node_data_to_yojson x |> Yojson.Safe.to_string) ^ print_node_list xs
+    in
     let () =
-        (Lwt_log.debug @@ Printf.sprintf "%s\n" (CC.commit_data_to_yojson commit_data |> Yojson.Safe.to_string))
+        (Lwt_log.debug @@ (Printf.sprintf "node_list: " ^ (print_node_list commit_data.node_list)))
           |> Lwt.ignore_result
     in
     let%lwt received_commit_data = VC.do_commit commit_data in
     let%lwt result_commit_data =
         Lwt.return (CC.commit_update received_commit_data)
+    in
+    let () =
+        (Lwt_log.debug @@ Printf.sprintf "result_tree: %s\n" (CT.to_yojson result_commit_data.config_result |> Yojson.Safe.to_string))
+          |> Lwt.ignore_result
     in
     match result_commit_data.init with
     | None ->
