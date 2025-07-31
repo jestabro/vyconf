@@ -244,6 +244,10 @@ let commit world token (req: request_commit) =
 
     let commit_data = Session.prepare_commit ~dry_run:req_dry_run world s token
     in
+    let () =
+        (Lwt_log.debug @@ Printf.sprintf "%s\n" (CC.commit_data_to_yojson commit_data |> Yojson.Safe.to_string))
+          |> Lwt.ignore_result
+    in
     let%lwt received_commit_data = VC.do_commit commit_data in
     let%lwt result_commit_data =
         Lwt.return (CC.commit_update received_commit_data)
