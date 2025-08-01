@@ -252,6 +252,10 @@ let commit world token (req: request_commit) =
             Printf.sprintf "%s; " (CC.node_data_to_yojson x |> Yojson.Safe.to_string) ^ print_node_list xs
     in
     let () =
+        (Lwt_log.debug @@ Printf.sprintf "config_diff: %s\n" (CT.to_yojson commit_data.config_diff |> Yojson.Safe.to_string))
+          |> Lwt.ignore_result
+    in
+    let () =
         (Lwt_log.debug @@ (Printf.sprintf "node_list: " ^ (print_node_list commit_data.node_list)))
           |> Lwt.ignore_result
     in
