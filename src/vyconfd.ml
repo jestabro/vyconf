@@ -255,12 +255,16 @@ let commit world token (req: request_commit) =
         (Lwt_log.debug @@ (Printf.sprintf "node_list: " ^ (print_node_list commit_data.node_list)))
           |> Lwt.ignore_result
     in
+    let () =
+        (Lwt_log.debug @@ Printf.sprintf "result_tree before: %s\n" (CT.to_yojson commit_data.config_result |> Yojson.Safe.to_string))
+          |> Lwt.ignore_result
+    in
     let%lwt received_commit_data = VC.do_commit commit_data in
     let%lwt result_commit_data =
         Lwt.return (CC.commit_update received_commit_data)
     in
     let () =
-        (Lwt_log.debug @@ Printf.sprintf "result_tree: %s\n" (CT.to_yojson result_commit_data.config_result |> Yojson.Safe.to_string))
+        (Lwt_log.debug @@ Printf.sprintf "result_tree after: %s\n" (CT.to_yojson result_commit_data.config_result |> Yojson.Safe.to_string))
           |> Lwt.ignore_result
     in
     match result_commit_data.init with
