@@ -5,6 +5,7 @@ open Vyconfd_config.Defaults
 open Vyconfd_config.Vyconf_config
 
 module CT = Vyos1x.Config_tree
+module CD = Vyos1x.Config_diff
 module IC = Vyos1x.Internal.Make(CT)
 module CC = Commitd_client.Commit
 module VC = Commitd_client.Vycall_client
@@ -261,6 +262,10 @@ let commit world token (req: request_commit) =
     in
     let () =
         (Lwt_log.debug @@ Printf.sprintf "config_diff: %s\n" (CT.to_yojson commit_data.config_diff |> Yojson.Safe.to_string))
+          |> Lwt.ignore_result
+    in
+    let () =
+        (Lwt_log.debug @@ Printf.sprintf "tagged delete tree: %s\n" (CT.to_yojson (CD.get_tagged_delete_tree commit_data.config_diff) |> Yojson.Safe.to_string))
           |> Lwt.ignore_result
     in
     let () =
