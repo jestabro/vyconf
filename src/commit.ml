@@ -107,7 +107,9 @@ let get_node_data rt ct src (path, cs') t =
     else
     let rpath = List.rev path in
     (* the following is critical to avoid redundant calculations for owner
-       of a tag node, quadratic in the number of tag node values *)
+       of a tag node, quadratic in the number of tag node values.
+       commit_data entries for individual tag nodes are added below.
+     *)
     if CT.is_tag_value ct rpath then
         (path, cs')
     else
