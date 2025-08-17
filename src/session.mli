@@ -2,7 +2,7 @@ type cfg_op =
     | CfgSet of string list * string option * Vyos1x.Config_tree.value_behaviour
     | CfgDelete of string list * string option
 
-type change_sets = {
+type change_set = {
     add: cfg_op list;
     delete: cfg_op list;
 }
@@ -18,7 +18,7 @@ type session_data = {
     proposed_config : Vyos1x.Config_tree.t;
     modified: bool;
     conf_mode: bool;
-    changeset: change_sets;
+    changeset: change_set;
     client_app: string;
     user: string;
     client_pid: int32
@@ -31,6 +31,8 @@ val make : world -> string -> string -> int32 -> session_data
 val set_modified : session_data -> session_data
 
 val validate : world -> session_data -> string list -> unit
+
+val get_changeset : world -> Vyos1x.Config_tree.t -> Vyos1x.Config_tree.t -> change_set
 
 val set : world -> session_data -> string list -> session_data
 

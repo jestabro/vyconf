@@ -263,6 +263,14 @@ let commit world token (req: request_commit) =
             (* partial commit *)
             if not req_dry_run then
                 world.Session.running_config <- result_commit_data.config_result;
+                let session =
+                    { s with changeset =
+                        Session.get_changeset
+                        world
+                        world.Session.running_config
+                        result_commit_data.config_result }
+                in Hashtbl.replace sessions token session;
+
             let success, msg_str =
                 result_commit_data.result.success, result_commit_data.result.out
             in

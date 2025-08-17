@@ -13,7 +13,7 @@ type cfg_op =
     | CfgSet of string list * string option * CT.value_behaviour
     | CfgDelete of string list * string	option
 
-type change_sets = {
+type change_set = {
     add: cfg_op list;
     delete: cfg_op list;
 }
@@ -29,7 +29,7 @@ type session_data = {
     proposed_config : CT.t;
     modified: bool;
     conf_mode: bool;
-    changeset: change_sets;
+    changeset: change_set;
     client_app: string;
     user: string;
     client_pid: int32;
