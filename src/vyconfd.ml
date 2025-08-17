@@ -115,7 +115,7 @@ let exit_conf_mode world token =
     let session = Hashtbl.find sessions token in
     let session = {session with
         proposed_config=world.running_config;
-        changeset = (TreeDelete (CT.default), TreeSet (CT.default));
+        changeset = { add = []; delete = []; };
         modified = false}
     in Hashtbl.replace sessions token session;
     response_tmpl
