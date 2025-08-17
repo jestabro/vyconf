@@ -13,6 +13,10 @@ type cfg_op =
     | CfgSet of string list * string option * CT.value_behaviour
     | CfgDelete of string list * string	option
 
+type tree_op =
+    | TreeSet of CT.t
+    | TreeDelete of CT.t
+
 type world = {
     mutable running_config: CT.t;
     mutable reference_tree: RT.t;
@@ -24,7 +28,7 @@ type session_data = {
     proposed_config : CT.t;
     modified: bool;
     conf_mode: bool;
-    changeset: cfg_op list;
+    changeset: tree_op * tree_op;
     client_app: string;
     user: string;
     client_pid: int32;
@@ -34,7 +38,7 @@ let make world client_app user pid = {
     proposed_config = world.running_config;
     modified = false;
     conf_mode = false;
-    changeset = [];
+    changeset = (TreeDelete (CT.default), TreeSet (CT.default));
     client_app = client_app;
     user = user;
     client_pid = pid;
@@ -64,12 +68,12 @@ let apply_cfg_op op config =
         CT.set config path value value_behaviour
     | CfgDelete (path, value) -> 
         CT.delete config path value
-
+(*
 let rec apply_changes changeset config =
     match changeset with
     | [] -> config
     | c :: cs -> apply_changes cs (apply_cfg_op c config)
-
+*)
 let validate w _s path =
     try
         RT.validate_path D.(w.dirs.validators) w.reference_tree path
@@ -99,7 +103,8 @@ let set w s path =
         | CT.Useless_set | CT.Duplicate_value -> s.proposed_config
 
     in
-    {s with proposed_config=config; changeset=(op :: s.changeset)}
+    {s with proposed_config=config;}
+(*    {s with proposed_config=config; changeset=(op :: s.changeset)} *)
 
 let delete w s path =
     let path, value = split_path w s path in
@@ -111,7 +116,8 @@ let delete w s path =
         with
         | VT.Nonexistent_path | CT.No_such_value -> s.proposed_config
     in
-    {s with proposed_config=config; changeset=(op :: s.changeset)}
+    {s with proposed_config=config;}
+(*    {s with proposed_config=config; changeset=(op :: s.changeset)} *)
 
 let discard w s =
     {s with proposed_config=w.running_config}

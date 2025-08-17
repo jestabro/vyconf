@@ -2,6 +2,10 @@ type cfg_op =
     | CfgSet of string list * string option * Vyos1x.Config_tree.value_behaviour
     | CfgDelete of string list * string option
 
+type tree_op =
+    | TreeSet of Vyos1x.Config_tree.t
+    | TreeDelete of Vyos1x.Config_tree.t
+
 type world = {
     mutable running_config: Vyos1x.Config_tree.t;
     mutable reference_tree: Vyos1x.Reference_tree.t;
@@ -13,7 +17,7 @@ type session_data = {
     proposed_config : Vyos1x.Config_tree.t;
     modified: bool;
     conf_mode: bool;
-    changeset: cfg_op list;
+    changeset: tree_op * tree_op;
     client_app: string;
     user: string;
     client_pid: int32
@@ -25,7 +29,8 @@ val make : world -> string -> string -> int32 -> session_data
 
 val set_modified : session_data -> session_data
 
-val apply_changes : cfg_op list -> Vyos1x.Config_tree.t -> Vyos1x.Config_tree.t
+(*val apply_changes : cfg_op list -> Vyos1x.Config_tree.t ->
+    Vyos1x.Config_tree.t *)
 
 val validate : world -> session_data -> string list -> unit
 
