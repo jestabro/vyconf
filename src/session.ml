@@ -81,7 +81,7 @@ let apply_cfg_op w op config =
     in config
 
 let rec apply_changes w changeset config =
-    match (List.rev changeset) with
+    match changeset with
     | [] -> config
     | c :: cs -> apply_changes w cs (apply_cfg_op w c config)
 
@@ -101,7 +101,7 @@ let split_path w path =
 
 let get_proposed_config w s =
     let c = w.running_config in
-    apply_changes w s.changeset c
+    apply_changes w (List.rev s.changeset) c
 
 let update_set w changeset path =
     let path, value = split_path w path in
