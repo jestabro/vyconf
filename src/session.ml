@@ -190,9 +190,8 @@ let save w s file =
     | Error e -> raise (Session_error (Printf.sprintf "Error saving config: %s" e))
     | Ok () -> s
 
-let prepare_commit ?(dry_run=false) w s id =
+let prepare_commit ?(dry_run=false) w config id =
     let at = w.running_config in
-    let wt = get_proposed_config w s in
     let rt = w.reference_tree in
     let vc = w.vyconf_config in
     let () =
@@ -203,11 +202,11 @@ let prepare_commit ?(dry_run=false) w s id =
     in
     let () =
         try
-            IC.write_internal wt (FP.concat vc.session_dir vc.session_cache)
+            IC.write_internal config (FP.concat vc.session_dir vc.session_cache)
         with
             Vyos1x.Internal.Write_error msg -> raise (Session_error msg)
     in
-    CC.make_commit_data ~dry_run:dry_run rt at wt id
+    CC.make_commit_data ~dry_run:dry_run rt at config id
 
 let get_config w s id =
     let at = w.running_config in
