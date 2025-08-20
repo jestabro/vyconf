@@ -140,6 +140,10 @@ type request_reload_reftree = {
   on_behalf_of : int32 option;
 }
 
+type request_oob = {
+  word : string;
+}
+
 type request =
   | Prompt
   | Setup_session of request_setup_session
@@ -170,6 +174,7 @@ type request =
   | Session_of_pid of request_session_of_pid
   | Session_update_pid of request_session_update_pid
   | Get_config of request_get_config
+  | Oob of request_oob
 
 type request_envelope = {
   token : string option;
@@ -403,6 +408,12 @@ let rec default_request_reload_reftree
   ?on_behalf_of:((on_behalf_of:int32 option) = None)
   () : request_reload_reftree  = {
   on_behalf_of;
+}
+
+let rec default_request_oob 
+  ?word:((word:string) = "")
+  () : request_oob  = {
+  word;
 }
 
 let rec default_request (): request = Prompt
@@ -681,6 +692,14 @@ let default_request_reload_reftree_mutable () : request_reload_reftree_mutable =
   on_behalf_of = None;
 }
 
+type request_oob_mutable = {
+  mutable word : string;
+}
+
+let default_request_oob_mutable () : request_oob_mutable = {
+  word = "";
+}
+
 type request_envelope_mutable = {
   mutable token : string option;
   mutable request : request;
@@ -915,6 +934,12 @@ let rec pp_request_reload_reftree fmt (v:request_reload_reftree) =
   in
   Pbrt.Pp.pp_brk pp_i fmt ()
 
+let rec pp_request_oob fmt (v:request_oob) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "word" Pbrt.Pp.pp_string fmt v.word;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
 let rec pp_request fmt (v:request) =
   match v with
   | Prompt  -> Format.fprintf fmt "Prompt"
@@ -946,6 +971,7 @@ let rec pp_request fmt (v:request) =
   | Session_of_pid x -> Format.fprintf fmt "@[<hv2>Session_of_pid(@,%a)@]" pp_request_session_of_pid x
   | Session_update_pid x -> Format.fprintf fmt "@[<hv2>Session_update_pid(@,%a)@]" pp_request_session_update_pid x
   | Get_config x -> Format.fprintf fmt "@[<hv2>Get_config(@,%a)@]" pp_request_get_config x
+  | Oob x -> Format.fprintf fmt "@[<hv2>Oob(@,%a)@]" pp_request_oob x
 
 let rec pp_request_envelope fmt (v:request_envelope) = 
   let pp_i fmt () =
@@ -1277,6 +1303,11 @@ let rec encode_pb_request_reload_reftree (v:request_reload_reftree) encoder =
   end;
   ()
 
+let rec encode_pb_request_oob (v:request_oob) encoder = 
+  Pbrt.Encoder.string v.word encoder;
+  Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
+  ()
+
 let rec encode_pb_request (v:request) encoder = 
   begin match v with
   | Prompt ->
@@ -1366,6 +1397,9 @@ let rec encode_pb_request (v:request) encoder =
   | Get_config x ->
     Pbrt.Encoder.nested encode_pb_request_get_config x encoder;
     Pbrt.Encoder.key 29 Pbrt.Bytes encoder; 
+  | Oob x ->
+    Pbrt.Encoder.nested encode_pb_request_oob x encoder;
+    Pbrt.Encoder.key 30 Pbrt.Bytes encoder; 
   end
 
 let rec encode_pb_request_envelope (v:request_envelope) encoder = 
@@ -2093,6 +2127,26 @@ let rec decode_pb_request_reload_reftree d =
     on_behalf_of = v.on_behalf_of;
   } : request_reload_reftree)
 
+let rec decode_pb_request_oob d =
+  let v = default_request_oob_mutable () in
+  let continue__= ref true in
+  let word_is_set = ref false in
+  while !continue__ do
+    match Pbrt.Decoder.key d with
+    | None -> (
+    ); continue__ := false
+    | Some (1, Pbrt.Bytes) -> begin
+      v.word <- Pbrt.Decoder.string d; word_is_set := true;
+    end
+    | Some (1, pk) -> 
+      Pbrt.Decoder.unexpected_payload "Message(request_oob), field(1)" pk
+    | Some (_, payload_kind) -> Pbrt.Decoder.skip d payload_kind
+  done;
+  begin if not !word_is_set then Pbrt.Decoder.missing_field "word" end;
+  ({
+    word = v.word;
+  } : request_oob)
+
 let rec decode_pb_request d = 
   let rec loop () = 
     let ret:request = match Pbrt.Decoder.key d with
@@ -2135,6 +2189,7 @@ let rec decode_pb_request d =
       | Some (27, _) -> (Session_of_pid (decode_pb_request_session_of_pid (Pbrt.Decoder.nested d)) : request) 
       | Some (28, _) -> (Session_update_pid (decode_pb_request_session_update_pid (Pbrt.Decoder.nested d)) : request) 
       | Some (29, _) -> (Get_config (decode_pb_request_get_config (Pbrt.Decoder.nested d)) : request) 
+      | Some (30, _) -> (Oob (decode_pb_request_oob (Pbrt.Decoder.nested d)) : request) 
       | Some (n, payload_kind) -> (
         Pbrt.Decoder.skip d payload_kind; 
         loop () 

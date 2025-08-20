@@ -147,6 +147,10 @@ type request_reload_reftree = {
   on_behalf_of : int32 option;
 }
 
+type request_oob = {
+  word : string;
+}
+
 type request =
   | Prompt
   | Setup_session of request_setup_session
@@ -177,6 +181,7 @@ type request =
   | Session_of_pid of request_session_of_pid
   | Session_update_pid of request_session_update_pid
   | Get_config of request_get_config
+  | Oob of request_oob
 
 type request_envelope = {
   token : string option;
@@ -398,6 +403,12 @@ val default_request_reload_reftree :
   request_reload_reftree
 (** [default_request_reload_reftree ()] is the default value for type [request_reload_reftree] *)
 
+val default_request_oob : 
+  ?word:string ->
+  unit ->
+  request_oob
+(** [default_request_oob ()] is the default value for type [request_oob] *)
+
 val default_request : unit -> request
 (** [default_request ()] is the default value for type [request] *)
 
@@ -516,6 +527,9 @@ val pp_request_exit_configuration_mode : Format.formatter -> request_exit_config
 val pp_request_reload_reftree : Format.formatter -> request_reload_reftree -> unit 
 (** [pp_request_reload_reftree v] formats v *)
 
+val pp_request_oob : Format.formatter -> request_oob -> unit 
+(** [pp_request_oob v] formats v *)
+
 val pp_request : Format.formatter -> request -> unit 
 (** [pp_request v] formats v *)
 
@@ -624,6 +638,9 @@ val encode_pb_request_exit_configuration_mode : request_exit_configuration_mode 
 val encode_pb_request_reload_reftree : request_reload_reftree -> Pbrt.Encoder.t -> unit
 (** [encode_pb_request_reload_reftree v encoder] encodes [v] with the given [encoder] *)
 
+val encode_pb_request_oob : request_oob -> Pbrt.Encoder.t -> unit
+(** [encode_pb_request_oob v encoder] encodes [v] with the given [encoder] *)
+
 val encode_pb_request : request -> Pbrt.Encoder.t -> unit
 (** [encode_pb_request v encoder] encodes [v] with the given [encoder] *)
 
@@ -731,6 +748,9 @@ val decode_pb_request_exit_configuration_mode : Pbrt.Decoder.t -> request_exit_c
 
 val decode_pb_request_reload_reftree : Pbrt.Decoder.t -> request_reload_reftree
 (** [decode_pb_request_reload_reftree decoder] decodes a [request_reload_reftree] binary value from [decoder] *)
+
+val decode_pb_request_oob : Pbrt.Decoder.t -> request_oob
+(** [decode_pb_request_oob decoder] decodes a [request_oob] binary value from [decoder] *)
 
 val decode_pb_request : Pbrt.Decoder.t -> request
 (** [decode_pb_request decoder] decodes a [request] binary value from [decoder] *)

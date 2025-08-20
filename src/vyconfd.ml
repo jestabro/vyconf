@@ -245,7 +245,9 @@ let commit world token (req: request_commit) =
 
     let commit_data = Session.prepare_commit ~dry_run:req_dry_run world proposed_config token
     in
+    let () = (Lwt_log.debug @@ Printf.sprintf "before commit\n") |> Lwt.ignore_result in
     let%lwt received_commit_data = VC.do_commit commit_data in
+    let () = (Lwt_log.debug @@ Printf.sprintf "after commit\n") |> Lwt.ignore_result in
     let%lwt result_commit_data =
         Lwt.return (CC.commit_update received_commit_data)
     in
@@ -289,6 +291,11 @@ let reload_reftree world (_req: request_reload_reftree) =
         world.reference_tree <- reftree;
         {response_tmpl with status=Success}
     | Error s -> {response_tmpl with status=Fail; error=(Some s)}
+
+let oob _world _token (req: request_oob) =
+    let word = req.word in
+    let () = (Lwt_log.debug @@ Printf.sprintf "[%s]\n" word) |> Lwt.ignore_result in
+    {response_tmpl with status=Success; output=(Some word)}
 
 let send_response oc resp =
     let enc = Pbrt.Encoder.create () in
@@ -338,6 +345,7 @@ let rec handle_connection world ic oc () =
                     | Some t, Load r -> load world t r
                     | Some t, Merge r -> merge world t r
                     | Some t, Save r -> save world t r
+                    | Some t, Oob r -> oob world t r
                     | _ -> failwith "Unimplemented"
                     ) |> Lwt.return
                end

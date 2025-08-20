@@ -146,6 +146,9 @@ message Request {
     optional int32 OnBehalfOf = 1;
   }
 
+  message Oob {
+    required string Word = 1;
+  }
 
   oneof msg {
     Prompt prompt = 1;
@@ -177,6 +180,7 @@ message Request {
     SessionOfPid session_of_pid = 27;
     SessionUpdatePid session_update_pid = 28;
     GetConfig get_config = 29;
+    Oob oob = 30;
   }
 }
 
