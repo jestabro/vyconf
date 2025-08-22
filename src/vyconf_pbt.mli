@@ -27,8 +27,8 @@ type request_session_of_pid = {
   client_pid : int32;
 }
 
-type request_session_update_pid = {
-  client_pid : int32;
+type request_session_exists = {
+  dummy : int32 option;
 }
 
 type request_get_config = {
@@ -179,7 +179,7 @@ type request =
   | Discard of request_discard
   | Session_changed of request_session_changed
   | Session_of_pid of request_session_of_pid
-  | Session_update_pid of request_session_update_pid
+  | Session_exists of request_session_exists
   | Get_config of request_get_config
   | Oob of request_oob
 
@@ -233,11 +233,11 @@ val default_request_session_of_pid :
   request_session_of_pid
 (** [default_request_session_of_pid ()] is the default value for type [request_session_of_pid] *)
 
-val default_request_session_update_pid : 
-  ?client_pid:int32 ->
+val default_request_session_exists : 
+  ?dummy:int32 option ->
   unit ->
-  request_session_update_pid
-(** [default_request_session_update_pid ()] is the default value for type [request_session_update_pid] *)
+  request_session_exists
+(** [default_request_session_exists ()] is the default value for type [request_session_exists] *)
 
 val default_request_get_config : 
   ?dummy:int32 option ->
@@ -449,8 +449,8 @@ val pp_request_setup_session : Format.formatter -> request_setup_session -> unit
 val pp_request_session_of_pid : Format.formatter -> request_session_of_pid -> unit 
 (** [pp_request_session_of_pid v] formats v *)
 
-val pp_request_session_update_pid : Format.formatter -> request_session_update_pid -> unit 
-(** [pp_request_session_update_pid v] formats v *)
+val pp_request_session_exists : Format.formatter -> request_session_exists -> unit 
+(** [pp_request_session_exists v] formats v *)
 
 val pp_request_get_config : Format.formatter -> request_get_config -> unit 
 (** [pp_request_get_config v] formats v *)
@@ -560,8 +560,8 @@ val encode_pb_request_setup_session : request_setup_session -> Pbrt.Encoder.t ->
 val encode_pb_request_session_of_pid : request_session_of_pid -> Pbrt.Encoder.t -> unit
 (** [encode_pb_request_session_of_pid v encoder] encodes [v] with the given [encoder] *)
 
-val encode_pb_request_session_update_pid : request_session_update_pid -> Pbrt.Encoder.t -> unit
-(** [encode_pb_request_session_update_pid v encoder] encodes [v] with the given [encoder] *)
+val encode_pb_request_session_exists : request_session_exists -> Pbrt.Encoder.t -> unit
+(** [encode_pb_request_session_exists v encoder] encodes [v] with the given [encoder] *)
 
 val encode_pb_request_get_config : request_get_config -> Pbrt.Encoder.t -> unit
 (** [encode_pb_request_get_config v encoder] encodes [v] with the given [encoder] *)
@@ -671,8 +671,8 @@ val decode_pb_request_setup_session : Pbrt.Decoder.t -> request_setup_session
 val decode_pb_request_session_of_pid : Pbrt.Decoder.t -> request_session_of_pid
 (** [decode_pb_request_session_of_pid decoder] decodes a [request_session_of_pid] binary value from [decoder] *)
 
-val decode_pb_request_session_update_pid : Pbrt.Decoder.t -> request_session_update_pid
-(** [decode_pb_request_session_update_pid decoder] decodes a [request_session_update_pid] binary value from [decoder] *)
+val decode_pb_request_session_exists : Pbrt.Decoder.t -> request_session_exists
+(** [decode_pb_request_session_exists decoder] decodes a [request_session_exists] binary value from [decoder] *)
 
 val decode_pb_request_get_config : Pbrt.Decoder.t -> request_get_config
 (** [decode_pb_request_get_config decoder] decodes a [request_get_config] binary value from [decoder] *)
