@@ -237,7 +237,13 @@ let commit world token (req: request_commit) =
     let proposed_config = Session.get_proposed_config world s in
     let req_dry_run = Option.value req.dry_run ~default:false in
 
-    let commit_data = Session.prepare_commit ~dry_run:req_dry_run world proposed_config token
+    let commit_data =
+        Session.prepare_commit
+        ~dry_run:req_dry_run
+        world
+        proposed_config
+        token
+        s.client_pid
     in
     let () = (Lwt_log.debug @@ Printf.sprintf "before commit\n") |> Lwt.ignore_result in
     let%lwt received_commit_data = VC.do_commit commit_data in
