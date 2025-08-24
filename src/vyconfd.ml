@@ -245,9 +245,9 @@ let commit world token (req: request_commit) =
         token
         s.client_pid
     in
-    let () = (Lwt_log.debug @@ Printf.sprintf "before commit\n") |> Lwt.ignore_result in
+    let%lwt () = (Lwt_log.debug @@ Printf.sprintf "before commit\n") in
     let%lwt received_commit_data = VC.do_commit commit_data in
-    let () = (Lwt_log.debug @@ Printf.sprintf "after commit\n") |> Lwt.ignore_result in
+    let%lwt () = Lwt_log.debug @@ Printf.sprintf "after commit\n" in
     let%lwt result_commit_data =
         Lwt.return (CC.commit_update received_commit_data)
     in
