@@ -21,6 +21,7 @@ type call = {
 
 type commit = {
   session_id : string;
+  session_pid : int32 option;
   dry_run : bool;
   atomic : bool;
   background : bool;
@@ -49,6 +50,7 @@ val default_call :
 
 val default_commit : 
   ?session_id:string ->
+  ?session_pid:int32 option ->
   ?dry_run:bool ->
   ?atomic:bool ->
   ?background:bool ->
