@@ -14,6 +14,7 @@ type session_data = {
     modified: bool;
     conf_mode: bool;
     changeset: cfg_op list;
+    aux_changeset: cfg_op list;
     client_app: string;
     user: string;
     client_pid: int32
@@ -32,6 +33,10 @@ val get_changeset : world -> Vyos1x.Config_tree.t -> Vyos1x.Config_tree.t -> cfg
 val set : world -> session_data -> string list -> session_data
 
 val delete : world -> session_data -> string list -> session_data
+
+val aux_set : world -> session_data -> string list -> session_data
+
+val aux_delete : world -> session_data -> string list -> session_data
 
 val get_proposed_config : world -> session_data -> Vyos1x.Config_tree.t
 

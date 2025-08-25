@@ -25,6 +25,7 @@ type session_data = {
     modified: bool;
     conf_mode: bool;
     changeset: cfg_op list;
+    aux_changeset: cfg_op list;
     client_app: string;
     user: string;
     client_pid: int32;
@@ -35,6 +36,7 @@ let make world client_app user pid = {
     modified = false;
     conf_mode = false;
     changeset = [];
+    aux_changeset = [];
     client_app = client_app;
     user = user;
     client_pid = pid;
@@ -142,6 +144,15 @@ let delete w s path =
     let changeset' = update_delete w s.changeset path in
     { s with changeset = changeset' }
 
+let aux_set w s path =
+    let _ = validate w s path in
+    let changeset' = update_set w s.changeset path in
+    { s with aux_changeset = changeset' }
+
+let aux_delete w s path =
+    let changeset' = update_delete w s.changeset path in
+    { s with aux_changeset = changeset' }
+
 let discard _w s =
     { s with changeset = []; }
 
@@ -206,7 +217,10 @@ let prepare_commit ?(dry_run=false) w config id pid =
             Vyos1x.Internal.Write_error msg -> raise (Session_error msg)
     in
     CC.make_commit_data ~dry_run:dry_run rt at config id pid
-
+(*
+let post_process_commit w s config c_data n_data =
+    let func
+*)
 let get_config w s id =
     let at = w.running_config in
     let wt = get_proposed_config w s in
