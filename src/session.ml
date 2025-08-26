@@ -3,6 +3,7 @@ module IC = Vyos1x.Internal.Make(CT)
 module CC = Commitd_client.Commit
 module CD = Vyos1x.Config_diff
 module VT = Vyos1x.Vytree
+module VL = Vyos1x.Vylist
 module RT = Vyos1x.Reference_tree
 module D = Directories
 module FP = FilePath
@@ -22,8 +23,8 @@ type world = {
 
 type aux_op = {
     script_name: string;
-    tagvalue: string option;
-    changset: cfg_op list;
+    tag_value: string option;
+    changeset: cfg_op list;
 }
 
 type session_data = {
@@ -153,36 +154,47 @@ let delete w s path =
 let aux_set w s path name tagval =
     let _ = validate w s path in
     let aux = s.aux_changeset in
-    let new_op = { script_name = name; tagvalue = tagval; } in
-    let op' = Vylist.find (p new_op) aux in
+    let ident y =
+        if (y.script_name <> name || y.tag_value <> tagval) then false
+        else true
+    in
+    let op' = VL.find ident aux in
+    let changeset' =
     match op' with
-    | None -> { s with aux_changeset = (new_op :: aux) }
-    | Some op -> 
-    let changeset' =
-        update_set w op.changeset path
-    in
-    let aux' =
-        { op with changeset = changeset' }
-    in
-    { s with aux_changeset = (aux' :: aux) }
-
-let aux_delete w s path name tagvalue =
-    let aux = s.aux_changeset in
-    let changeset' =
-        update_delete w aux.changeset path
+    | None ->
+        update_set w [] path
+    | Some o ->
+        update_set w o.changeset path
     in
     let op =
-        { script_name = name; tagvalue = tagvalue; changeset = changeset' }
+    { script_name = name; tag_value = tagval; changeset = changeset' }
     in
-    let aux' =
-        let p x y =
-            if (x.script_name <> y.script_name || x.tagvalue <> y.tagvalue) then false
-            else true
-        in
-        try Vylist.replace p op aux
-        with Not_found -> (op :: aux)
+    let aux_changeset' =
+        VL.replace_or_cons ident op aux
     in
-    { s with aux_changeset = (aux' :: aux) }
+    { s with aux_changeset = aux_changeset' }
+
+let aux_delete w s path name tagval =
+    let aux = s.aux_changeset in
+    let ident y =
+        if (y.script_name <> name || y.tag_value <> tagval) then false
+        else true
+    in
+    let op' = VL.find ident aux in
+    let changeset' =
+    match op' with
+    | None ->
+        update_delete w [] path
+    | Some o ->
+        update_delete w o.changeset path
+    in
+    let op =
+    { script_name = name; tag_value = tagval; changeset = changeset' }
+    in
+    let aux_changeset' =
+        VL.replace_or_cons ident op aux
+    in
+    { s with aux_changeset = aux_changeset' }
 
 let discard _w s =
     { s with changeset = []; }
@@ -248,10 +260,33 @@ let prepare_commit ?(dry_run=false) w config id pid =
             Vyos1x.Internal.Write_error msg -> raise (Session_error msg)
     in
     CC.make_commit_data ~dry_run:dry_run rt at config id pid
-(*
-let post_process_commit w s config c_data n_data =
-    let func
-*)
+
+let post_process_commit w s (c_data: CC.commit_data) =
+    let ident n v y =
+        if (y.script_name <> n || y.tag_value <> v) then false
+        else true
+    in
+    let func config (n_data: CC.node_data) =
+        match n_data.reply with
+        | None -> config
+        | Some reply ->
+            match reply.success with
+            | false -> config
+            | true ->
+                let post =
+                    VL.find
+                    (ident n_data.script_name n_data.tag_value)
+                    s.aux_changeset
+                in
+                match post with
+                | None -> config
+                | Some p -> apply_changes w p.changeset config
+    in
+    let post_config =
+        List.fold_left func c_data.config_result c_data.node_list
+    in
+    { c_data with config_result = post_config }
+
 let get_config w s id =
     let at = w.running_config in
     let wt = get_proposed_config w s in

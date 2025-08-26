@@ -45,6 +45,18 @@ type request_delete = {
   path : string list;
 }
 
+type request_aux_set = {
+  path : string list;
+  script_name : string;
+  tag_value : string option;
+}
+
+type request_aux_delete = {
+  path : string list;
+  script_name : string;
+  tag_value : string option;
+}
+
 type request_discard = {
   dummy : int32 option;
 }
@@ -140,10 +152,6 @@ type request_reload_reftree = {
   on_behalf_of : int32 option;
 }
 
-type request_oob = {
-  word : string;
-}
-
 type request =
   | Prompt
   | Setup_session of request_setup_session
@@ -174,7 +182,8 @@ type request =
   | Session_of_pid of request_session_of_pid
   | Session_exists of request_session_exists
   | Get_config of request_get_config
-  | Oob of request_oob
+  | Aux_set of request_aux_set
+  | Aux_delete of request_aux_delete
 
 type request_envelope = {
   token : string option;
@@ -258,6 +267,26 @@ let rec default_request_delete
   ?path:((path:string list) = [])
   () : request_delete  = {
   path;
+}
+
+let rec default_request_aux_set 
+  ?path:((path:string list) = [])
+  ?script_name:((script_name:string) = "")
+  ?tag_value:((tag_value:string option) = None)
+  () : request_aux_set  = {
+  path;
+  script_name;
+  tag_value;
+}
+
+let rec default_request_aux_delete 
+  ?path:((path:string list) = [])
+  ?script_name:((script_name:string) = "")
+  ?tag_value:((tag_value:string option) = None)
+  () : request_aux_delete  = {
+  path;
+  script_name;
+  tag_value;
 }
 
 let rec default_request_discard 
@@ -410,12 +439,6 @@ let rec default_request_reload_reftree
   on_behalf_of;
 }
 
-let rec default_request_oob 
-  ?word:((word:string) = "")
-  () : request_oob  = {
-  word;
-}
-
 let rec default_request (): request = Prompt
 
 let rec default_request_envelope 
@@ -508,6 +531,30 @@ type request_delete_mutable = {
 
 let default_request_delete_mutable () : request_delete_mutable = {
   path = [];
+}
+
+type request_aux_set_mutable = {
+  mutable path : string list;
+  mutable script_name : string;
+  mutable tag_value : string option;
+}
+
+let default_request_aux_set_mutable () : request_aux_set_mutable = {
+  path = [];
+  script_name = "";
+  tag_value = None;
+}
+
+type request_aux_delete_mutable = {
+  mutable path : string list;
+  mutable script_name : string;
+  mutable tag_value : string option;
+}
+
+let default_request_aux_delete_mutable () : request_aux_delete_mutable = {
+  path = [];
+  script_name = "";
+  tag_value = None;
 }
 
 type request_discard_mutable = {
@@ -692,14 +739,6 @@ let default_request_reload_reftree_mutable () : request_reload_reftree_mutable =
   on_behalf_of = None;
 }
 
-type request_oob_mutable = {
-  mutable word : string;
-}
-
-let default_request_oob_mutable () : request_oob_mutable = {
-  word = "";
-}
-
 type request_envelope_mutable = {
   mutable token : string option;
   mutable request : request;
@@ -792,6 +831,22 @@ let rec pp_request_set fmt (v:request_set) =
 let rec pp_request_delete fmt (v:request_delete) = 
   let pp_i fmt () =
     Pbrt.Pp.pp_record_field ~first:true "path" (Pbrt.Pp.pp_list Pbrt.Pp.pp_string) fmt v.path;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+let rec pp_request_aux_set fmt (v:request_aux_set) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "path" (Pbrt.Pp.pp_list Pbrt.Pp.pp_string) fmt v.path;
+    Pbrt.Pp.pp_record_field ~first:false "script_name" Pbrt.Pp.pp_string fmt v.script_name;
+    Pbrt.Pp.pp_record_field ~first:false "tag_value" (Pbrt.Pp.pp_option Pbrt.Pp.pp_string) fmt v.tag_value;
+  in
+  Pbrt.Pp.pp_brk pp_i fmt ()
+
+let rec pp_request_aux_delete fmt (v:request_aux_delete) = 
+  let pp_i fmt () =
+    Pbrt.Pp.pp_record_field ~first:true "path" (Pbrt.Pp.pp_list Pbrt.Pp.pp_string) fmt v.path;
+    Pbrt.Pp.pp_record_field ~first:false "script_name" Pbrt.Pp.pp_string fmt v.script_name;
+    Pbrt.Pp.pp_record_field ~first:false "tag_value" (Pbrt.Pp.pp_option Pbrt.Pp.pp_string) fmt v.tag_value;
   in
   Pbrt.Pp.pp_brk pp_i fmt ()
 
@@ -934,12 +989,6 @@ let rec pp_request_reload_reftree fmt (v:request_reload_reftree) =
   in
   Pbrt.Pp.pp_brk pp_i fmt ()
 
-let rec pp_request_oob fmt (v:request_oob) = 
-  let pp_i fmt () =
-    Pbrt.Pp.pp_record_field ~first:true "word" Pbrt.Pp.pp_string fmt v.word;
-  in
-  Pbrt.Pp.pp_brk pp_i fmt ()
-
 let rec pp_request fmt (v:request) =
   match v with
   | Prompt  -> Format.fprintf fmt "Prompt"
@@ -971,7 +1020,8 @@ let rec pp_request fmt (v:request) =
   | Session_of_pid x -> Format.fprintf fmt "@[<hv2>Session_of_pid(@,%a)@]" pp_request_session_of_pid x
   | Session_exists x -> Format.fprintf fmt "@[<hv2>Session_exists(@,%a)@]" pp_request_session_exists x
   | Get_config x -> Format.fprintf fmt "@[<hv2>Get_config(@,%a)@]" pp_request_get_config x
-  | Oob x -> Format.fprintf fmt "@[<hv2>Oob(@,%a)@]" pp_request_oob x
+  | Aux_set x -> Format.fprintf fmt "@[<hv2>Aux_set(@,%a)@]" pp_request_aux_set x
+  | Aux_delete x -> Format.fprintf fmt "@[<hv2>Aux_delete(@,%a)@]" pp_request_aux_delete x
 
 let rec pp_request_envelope fmt (v:request_envelope) = 
   let pp_i fmt () =
@@ -1093,6 +1143,36 @@ let rec encode_pb_request_delete (v:request_delete) encoder =
     Pbrt.Encoder.string x encoder;
     Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
   ) v.path encoder;
+  ()
+
+let rec encode_pb_request_aux_set (v:request_aux_set) encoder = 
+  Pbrt.List_util.rev_iter_with (fun x encoder -> 
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
+  ) v.path encoder;
+  Pbrt.Encoder.string v.script_name encoder;
+  Pbrt.Encoder.key 2 Pbrt.Bytes encoder; 
+  begin match v.tag_value with
+  | Some x -> 
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 3 Pbrt.Bytes encoder; 
+  | None -> ();
+  end;
+  ()
+
+let rec encode_pb_request_aux_delete (v:request_aux_delete) encoder = 
+  Pbrt.List_util.rev_iter_with (fun x encoder -> 
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
+  ) v.path encoder;
+  Pbrt.Encoder.string v.script_name encoder;
+  Pbrt.Encoder.key 2 Pbrt.Bytes encoder; 
+  begin match v.tag_value with
+  | Some x -> 
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 3 Pbrt.Bytes encoder; 
+  | None -> ();
+  end;
   ()
 
 let rec encode_pb_request_discard (v:request_discard) encoder = 
@@ -1307,11 +1387,6 @@ let rec encode_pb_request_reload_reftree (v:request_reload_reftree) encoder =
   end;
   ()
 
-let rec encode_pb_request_oob (v:request_oob) encoder = 
-  Pbrt.Encoder.string v.word encoder;
-  Pbrt.Encoder.key 1 Pbrt.Bytes encoder; 
-  ()
-
 let rec encode_pb_request (v:request) encoder = 
   begin match v with
   | Prompt ->
@@ -1401,9 +1476,12 @@ let rec encode_pb_request (v:request) encoder =
   | Get_config x ->
     Pbrt.Encoder.nested encode_pb_request_get_config x encoder;
     Pbrt.Encoder.key 29 Pbrt.Bytes encoder; 
-  | Oob x ->
-    Pbrt.Encoder.nested encode_pb_request_oob x encoder;
+  | Aux_set x ->
+    Pbrt.Encoder.nested encode_pb_request_aux_set x encoder;
     Pbrt.Encoder.key 30 Pbrt.Bytes encoder; 
+  | Aux_delete x ->
+    Pbrt.Encoder.nested encode_pb_request_aux_delete x encoder;
+    Pbrt.Encoder.key 31 Pbrt.Bytes encoder; 
   end
 
 let rec encode_pb_request_envelope (v:request_envelope) encoder = 
@@ -1643,6 +1721,72 @@ let rec decode_pb_request_delete d =
   ({
     path = v.path;
   } : request_delete)
+
+let rec decode_pb_request_aux_set d =
+  let v = default_request_aux_set_mutable () in
+  let continue__= ref true in
+  let script_name_is_set = ref false in
+  while !continue__ do
+    match Pbrt.Decoder.key d with
+    | None -> (
+      v.path <- List.rev v.path;
+    ); continue__ := false
+    | Some (1, Pbrt.Bytes) -> begin
+      v.path <- (Pbrt.Decoder.string d) :: v.path;
+    end
+    | Some (1, pk) -> 
+      Pbrt.Decoder.unexpected_payload "Message(request_aux_set), field(1)" pk
+    | Some (2, Pbrt.Bytes) -> begin
+      v.script_name <- Pbrt.Decoder.string d; script_name_is_set := true;
+    end
+    | Some (2, pk) -> 
+      Pbrt.Decoder.unexpected_payload "Message(request_aux_set), field(2)" pk
+    | Some (3, Pbrt.Bytes) -> begin
+      v.tag_value <- Some (Pbrt.Decoder.string d);
+    end
+    | Some (3, pk) -> 
+      Pbrt.Decoder.unexpected_payload "Message(request_aux_set), field(3)" pk
+    | Some (_, payload_kind) -> Pbrt.Decoder.skip d payload_kind
+  done;
+  begin if not !script_name_is_set then Pbrt.Decoder.missing_field "script_name" end;
+  ({
+    path = v.path;
+    script_name = v.script_name;
+    tag_value = v.tag_value;
+  } : request_aux_set)
+
+let rec decode_pb_request_aux_delete d =
+  let v = default_request_aux_delete_mutable () in
+  let continue__= ref true in
+  let script_name_is_set = ref false in
+  while !continue__ do
+    match Pbrt.Decoder.key d with
+    | None -> (
+      v.path <- List.rev v.path;
+    ); continue__ := false
+    | Some (1, Pbrt.Bytes) -> begin
+      v.path <- (Pbrt.Decoder.string d) :: v.path;
+    end
+    | Some (1, pk) -> 
+      Pbrt.Decoder.unexpected_payload "Message(request_aux_delete), field(1)" pk
+    | Some (2, Pbrt.Bytes) -> begin
+      v.script_name <- Pbrt.Decoder.string d; script_name_is_set := true;
+    end
+    | Some (2, pk) -> 
+      Pbrt.Decoder.unexpected_payload "Message(request_aux_delete), field(2)" pk
+    | Some (3, Pbrt.Bytes) -> begin
+      v.tag_value <- Some (Pbrt.Decoder.string d);
+    end
+    | Some (3, pk) -> 
+      Pbrt.Decoder.unexpected_payload "Message(request_aux_delete), field(3)" pk
+    | Some (_, payload_kind) -> Pbrt.Decoder.skip d payload_kind
+  done;
+  begin if not !script_name_is_set then Pbrt.Decoder.missing_field "script_name" end;
+  ({
+    path = v.path;
+    script_name = v.script_name;
+    tag_value = v.tag_value;
+  } : request_aux_delete)
 
 let rec decode_pb_request_discard d =
   let v = default_request_discard_mutable () in
@@ -2129,26 +2273,6 @@ let rec decode_pb_request_reload_reftree d =
     on_behalf_of = v.on_behalf_of;
   } : request_reload_reftree)
 
-let rec decode_pb_request_oob d =
-  let v = default_request_oob_mutable () in
-  let continue__= ref true in
-  let word_is_set = ref false in
-  while !continue__ do
-    match Pbrt.Decoder.key d with
-    | None -> (
-    ); continue__ := false
-    | Some (1, Pbrt.Bytes) -> begin
-      v.word <- Pbrt.Decoder.string d; word_is_set := true;
-    end
-    | Some (1, pk) -> 
-      Pbrt.Decoder.unexpected_payload "Message(request_oob), field(1)" pk
-    | Some (_, payload_kind) -> Pbrt.Decoder.skip d payload_kind
-  done;
-  begin if not !word_is_set then Pbrt.Decoder.missing_field "word" end;
-  ({
-    word = v.word;
-  } : request_oob)
-
 let rec decode_pb_request d = 
   let rec loop () = 
     let ret:request = match Pbrt.Decoder.key d with
@@ -2191,7 +2315,8 @@ let rec decode_pb_request d =
       | Some (27, _) -> (Session_of_pid (decode_pb_request_session_of_pid (Pbrt.Decoder.nested d)) : request) 
       | Some (28, _) -> (Session_exists (decode_pb_request_session_exists (Pbrt.Decoder.nested d)) : request) 
       | Some (29, _) -> (Get_config (decode_pb_request_get_config (Pbrt.Decoder.nested d)) : request) 
-      | Some (30, _) -> (Oob (decode_pb_request_oob (Pbrt.Decoder.nested d)) : request) 
+      | Some (30, _) -> (Aux_set (decode_pb_request_aux_set (Pbrt.Decoder.nested d)) : request) 
+      | Some (31, _) -> (Aux_delete (decode_pb_request_aux_delete (Pbrt.Decoder.nested d)) : request) 
       | Some (n, payload_kind) -> (
         Pbrt.Decoder.skip d payload_kind; 
         loop () 

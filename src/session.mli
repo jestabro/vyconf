@@ -9,12 +9,18 @@ type world = {
     dirs: Directories.t
 }
 
+type aux_op = {
+    script_name: string;
+    tag_value: string option;
+    changeset: cfg_op list;
+}
+
 type session_data = {
     proposed_config : Vyos1x.Config_tree.t;
     modified: bool;
     conf_mode: bool;
     changeset: cfg_op list;
-    aux_changeset: cfg_op list;
+    aux_changeset: aux_op list;
     client_app: string;
     user: string;
     client_pid: int32
@@ -34,9 +40,9 @@ val set : world -> session_data -> string list -> session_data
 
 val delete : world -> session_data -> string list -> session_data
 
-val aux_set : world -> session_data -> string list -> session_data
+val aux_set : world -> session_data -> string list -> string -> string option -> session_data
 
-val aux_delete : world -> session_data -> string list -> session_data
+val aux_delete : world -> session_data -> string list -> string -> string option -> session_data
 
 val get_proposed_config : world -> session_data -> Vyos1x.Config_tree.t
 
@@ -61,6 +67,8 @@ val list_children : world -> session_data -> string list -> string list
 val string_of_op : cfg_op -> string
 
 val prepare_commit : ?dry_run:bool -> world -> Vyos1x.Config_tree.t -> string -> int32 -> Commitd_client.Commit.commit_data
+
+val post_process_commit : world -> session_data -> Commitd_client.Commit.commit_data -> Commitd_client.Commit.commit_data
 
 val get_config : world -> session_data -> string -> string
 

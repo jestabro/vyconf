@@ -47,6 +47,18 @@ message Request {
     repeated string Path = 1;
   }
 
+  message AuxSet {
+    repeated string Path = 1;
+    required string script_name = 2;
+    optional string tag_value = 3;
+  }
+
+  message AuxDelete {
+    repeated string Path = 1;
+    required string script_name = 2;
+    optional string tag_value = 3;
+  }
+
   message Discard {
     optional int32 dummy = 1;
   }
@@ -146,10 +158,6 @@ message Request {
     optional int32 OnBehalfOf = 1;
   }
 
-  message Oob {
-    required string Word = 1;
-  }
-
   oneof msg {
     Prompt prompt = 1;
     SetupSession setup_session = 2;
@@ -180,7 +188,8 @@ message Request {
     SessionOfPid session_of_pid = 27;
     SessionExists session_exists = 28;
     GetConfig get_config = 29;
-    Oob oob = 30;
+    AuxSet aux_set = 30;
+    AuxDelete aux_delete = 31;
   }
 }
 

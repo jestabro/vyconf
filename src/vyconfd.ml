@@ -201,6 +201,36 @@ let delete world token (req: request_delete) =
         response_tmpl
     with Session.Session_error msg -> {response_tmpl with status=Fail; error=(Some msg)}
 
+let aux_set world token (req: request_aux_set) =
+    try
+        let () = (Lwt_log.debug @@ Printf.sprintf "[%s]\n" (Vyos1x.Util.string_of_list req.path)) |> Lwt.ignore_result in
+        let session =
+            Session.aux_set
+            world
+            (find_session token)
+            req.path
+            req.script_name
+            req.tag_value
+        in
+        Hashtbl.replace sessions token session;
+        response_tmpl
+    with Session.Session_error msg -> {response_tmpl with status=Fail; error=(Some msg)}
+
+let aux_delete world token (req: request_aux_delete) =
+    try
+        let () = (Lwt_log.debug @@ Printf.sprintf "[%s]\n" (Vyos1x.Util.string_of_list req.path)) |> Lwt.ignore_result in
+        let session =
+            Session.aux_delete
+            world
+            (find_session token)
+            req.path
+            req.script_name
+            req.tag_value
+        in
+        Hashtbl.replace sessions token session;
+        response_tmpl
+    with Session.Session_error msg -> {response_tmpl with status=Fail; error=(Some msg)}
+
 let discard world token (_req: request_discard) =
     try
         let session = Session.discard world (find_session token)
@@ -263,16 +293,20 @@ let commit world token (req: request_commit) =
         | false ->
             Lwt.return {response_tmpl with status=Internal_error; error=(Some out)}
         | true ->
-            (* partial commit *)
             if not req_dry_run then
-                world.Session.running_config <- result_commit_data.config_result;
+                let post_commit_data =
+                    Session.post_process_commit world s result_commit_data
+                in
+                world.Session.running_config <- post_commit_data.config_result;
                 let session =
                     { s with changeset =
                         Session.get_changeset
                         world
                         world.Session.running_config
-                        proposed_config }
-                in Hashtbl.replace sessions token session;
+                        proposed_config;
+                        aux_changeset = []; }
+                in Hashtbl.replace sessions token session
+            else ();
 
             let success, msg_str =
                 result_commit_data.result.success, result_commit_data.result.out
@@ -291,11 +325,6 @@ let reload_reftree world (_req: request_reload_reftree) =
         world.reference_tree <- reftree;
         {response_tmpl with status=Success}
     | Error s -> {response_tmpl with status=Fail; error=(Some s)}
-
-let oob _world _token (req: request_oob) =
-    let word = req.word in
-    let () = (Lwt_log.debug @@ Printf.sprintf "[%s]\n" word) |> Lwt.ignore_result in
-    {response_tmpl with status=Success; output=(Some word)}
 
 let send_response oc resp =
     let enc = Pbrt.Encoder.create () in
@@ -345,7 +374,6 @@ let rec handle_connection world ic oc () =
                     | Some t, Load r -> load world t r
                     | Some t, Merge r -> merge world t r
                     | Some t, Save r -> save world t r
-                    | Some t, Oob r -> oob world t r
                     | _ -> failwith "Unimplemented"
                     ) |> Lwt.return
                end
