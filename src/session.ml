@@ -20,12 +20,18 @@ type world = {
     dirs: Directories.t
 }
 
+type aux_op = {
+    script_name: string;
+    tagvalue: string option;
+    changset: cfg_op list;
+}
+
 type session_data = {
     proposed_config : CT.t;
     modified: bool;
     conf_mode: bool;
     changeset: cfg_op list;
-    aux_changeset: cfg_op list;
+    aux_changeset: aux_op list;
     client_app: string;
     user: string;
     client_pid: int32;
@@ -144,14 +150,39 @@ let delete w s path =
     let changeset' = update_delete w s.changeset path in
     { s with changeset = changeset' }
 
-let aux_set w s path =
+let aux_set w s path name tagval =
     let _ = validate w s path in
-    let changeset' = update_set w s.changeset path in
-    { s with aux_changeset = changeset' }
+    let aux = s.aux_changeset in
+    let new_op = { script_name = name; tagvalue = tagval; } in
+    let op' = Vylist.find (p new_op) aux in
+    match op' with
+    | None -> { s with aux_changeset = (new_op :: aux) }
+    | Some op -> 
+    let changeset' =
+        update_set w op.changeset path
+    in
+    let aux' =
+        { op with changeset = changeset' }
+    in
+    { s with aux_changeset = (aux' :: aux) }
 
-let aux_delete w s path =
-    let changeset' = update_delete w s.changeset path in
-    { s with aux_changeset = changeset' }
+let aux_delete w s path name tagvalue =
+    let aux = s.aux_changeset in
+    let changeset' =
+        update_delete w aux.changeset path
+    in
+    let op =
+        { script_name = name; tagvalue = tagvalue; changeset = changeset' }
+    in
+    let aux' =
+        let p x y =
+            if (x.script_name <> y.script_name || x.tagvalue <> y.tagvalue) then false
+            else true
+        in
+        try Vylist.replace p op aux
+        with Not_found -> (op :: aux)
+    in
+    { s with aux_changeset = (aux' :: aux) }
 
 let discard _w s =
     { s with changeset = []; }
