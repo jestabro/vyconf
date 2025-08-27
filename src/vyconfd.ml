@@ -366,6 +366,8 @@ let rec handle_connection world ic oc () =
                     | Some t, Validate r -> validate world t r
                     | Some t, Set r -> set world t r
                     | Some t, Delete r -> delete world t r
+                    | Some t, Aux_set r -> aux_set world t r
+                    | Some t, Aux_delete r -> aux_delete world t r
                     | Some t, Discard r -> discard world t r
                     | Some t, Session_changed r -> session_changed world t r
                     | Some t, Get_config r -> get_config world t r
