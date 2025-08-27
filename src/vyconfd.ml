@@ -204,7 +204,7 @@ let delete world token (req: request_delete) =
 let aux_set world token (req: request_aux_set) =
     try
         let () = (Lwt_log.debug @@ Printf.sprintf "[%s]\n" (Vyos1x.Util.string_of_list req.path)) |> Lwt.ignore_result in
-        let session =
+        let () =
             Session.aux_set
             world
             (find_session token)
@@ -212,14 +212,13 @@ let aux_set world token (req: request_aux_set) =
             req.script_name
             req.tag_value
         in
-        Hashtbl.replace sessions token session;
         response_tmpl
     with Session.Session_error msg -> {response_tmpl with status=Fail; error=(Some msg)}
 
 let aux_delete world token (req: request_aux_delete) =
     try
         let () = (Lwt_log.debug @@ Printf.sprintf "[%s]\n" (Vyos1x.Util.string_of_list req.path)) |> Lwt.ignore_result in
-        let session =
+        let () =
             Session.aux_delete
             world
             (find_session token)
@@ -227,7 +226,6 @@ let aux_delete world token (req: request_aux_delete) =
             req.script_name
             req.tag_value
         in
-        Hashtbl.replace sessions token session;
         response_tmpl
     with Session.Session_error msg -> {response_tmpl with status=Fail; error=(Some msg)}
 

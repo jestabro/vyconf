@@ -32,7 +32,7 @@ type session_data = {
     modified: bool;
     conf_mode: bool;
     changeset: cfg_op list;
-    aux_changeset: aux_op list;
+    mutable aux_changeset: aux_op list;
     client_app: string;
     user: string;
     client_pid: int32;
@@ -172,7 +172,7 @@ let aux_set w s path name tagval =
     let aux_changeset' =
         VL.replace_or_cons ident op aux
     in
-    { s with aux_changeset = aux_changeset' }
+    s.aux_changeset <- aux_changeset'
 
 let aux_delete w s path name tagval =
     let aux = s.aux_changeset in
@@ -194,7 +194,7 @@ let aux_delete w s path name tagval =
     let aux_changeset' =
         VL.replace_or_cons ident op aux
     in
-    { s with aux_changeset = aux_changeset' }
+    s.aux_changeset <- aux_changeset'
 
 let discard _w s =
     { s with changeset = []; }
