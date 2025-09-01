@@ -6,6 +6,7 @@ open Vyconfd_config.Vyconf_config
 
 module CT = Vyos1x.Config_tree
 module IC = Vyos1x.Internal.Make(CT)
+module VU = Vyos1x.Util
 module CC = Commitd_client.Commit
 module VC = Commitd_client.Vycall_client
 module FP = FilePath
@@ -286,6 +287,9 @@ let commit world token (req: request_commit) =
     | Some init_data ->
         let res, out =
             init_data.success, init_data.out
+        in
+        let () =
+            (Lwt_log.debug @@ Printf.sprintf "aux_changeset: %s" (Session.sprint_changeset s.aux_changeset)) |> Lwt.ignore_result
         in
         match res with
         | false ->

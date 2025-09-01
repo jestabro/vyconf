@@ -28,6 +28,8 @@ type session_data = {
 
 exception Session_error of string
 
+val sprint_changeset : aux_op list -> string
+
 val make : world -> string -> string -> int32 -> session_data
 
 val set_modified : session_data -> session_data

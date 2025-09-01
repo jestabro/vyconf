@@ -13,6 +13,7 @@ exception Session_error of string
 type cfg_op =
     | CfgSet of string list * string option * CT.value_behaviour
     | CfgDelete of string list * string	option
+    [@@deriving yojson]
 
 type world = {
     mutable running_config: CT.t;
@@ -25,7 +26,7 @@ type aux_op = {
     script_name: string;
     tag_value: string option;
     changeset: cfg_op list;
-}
+} [@@deriving yojson]
 
 type session_data = {
     proposed_config : CT.t;
@@ -61,6 +62,10 @@ let string_of_op op =
         (match value with
          | None -> Printf.sprintf "delete %s" path_str
          | Some v -> Printf.sprintf "delete %s \"%s\"" path_str v)
+
+let sprint_changeset ss =
+    let ss = List.map (fun x -> aux_op_to_yojson x) ss in
+    Yojson.Safe.to_string (`List ss)
 
 let set_modified s =
     if s.modified = true then s
