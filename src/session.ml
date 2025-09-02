@@ -268,7 +268,7 @@ let prepare_commit ?(dry_run=false) w config id pid =
 
 let post_process_commit w s (c_data: CC.commit_data) =
     let ident n v y =
-        if (y.script_name <> n || y.tag_value <> v) then false
+        if ((y.script_name <> n) || (y.tag_value <> v)) then false
         else true
     in
     let func config (n_data: CC.node_data) =
@@ -278,6 +278,7 @@ let post_process_commit w s (c_data: CC.commit_data) =
             match reply.success with
             | false -> config
             | true ->
+                begin
                 let post =
                     VL.find
                     (ident n_data.script_name n_data.tag_value)
@@ -286,6 +287,7 @@ let post_process_commit w s (c_data: CC.commit_data) =
                 match post with
                 | None -> config
                 | Some p -> apply_changes w p.changeset config
+                end
     in
     let post_config =
         List.fold_left func c_data.config_result c_data.node_list
