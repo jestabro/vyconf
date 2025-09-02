@@ -299,6 +299,8 @@ let commit world token (req: request_commit) =
                 let post_commit_data =
                     Session.post_process_commit world s result_commit_data
                 in
+                let () = (Lwt_log.debug @@ Printf.sprintf "post_config: %s" (CT.render_config post_commit_data.config_result)) |> Lwt.ignore_result
+                in
                 world.Session.running_config <- post_commit_data.config_result;
                 let session =
                     { s with changeset =
