@@ -13,7 +13,7 @@ type aux_op = {
     script_name: string;
     tag_value: string option;
     changeset: cfg_op list;
-}
+} [@@deriving yojson]
 
 type session_data = {
     proposed_config : Vyos1x.Config_tree.t;

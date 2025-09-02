@@ -14,6 +14,7 @@ module Gen = Vyos1x.Generate
 module Session = Vyconfd_config.Session
 module Directories = Vyconfd_config.Directories
 module Startup = Vyconfd_config.Startup
+module VL = Vyos1x.Vylist
 
 (* On UNIX, self_init uses /dev/random for seed *)
 let () = Random.self_init ()
@@ -261,6 +262,40 @@ let save world token (req: request_save) =
         response_tmpl
     with Session.Session_error msg -> {response_tmpl with status=Fail; error=(Some msg)}
 
+let debug_post_process_commit _w s (c_data: CC.commit_data) =
+    let ident n v (y: Session.aux_op) =
+        let () = (Lwt_log.debug @@ Printf.sprintf "name: %s; tagval: %s" n (Option.value v ~default:"None")) |> Lwt.ignore_result
+        in
+        if ((y.script_name <> n) || (y.tag_value <> v)) then false
+        else true
+    in
+    let func config (n_data: CC.node_data) =
+        match n_data.reply with
+        | None -> config
+        | Some reply ->
+            match reply.success with
+            | false -> config
+            | true ->
+                begin
+                let post =
+                    VL.find
+                    (ident n_data.script_name n_data.tag_value)
+                    s.Session.aux_changeset
+                in
+                match post with
+                | None -> config
+                | Some p ->
+                    let () =
+                        (Lwt_log.debug @@ Printf.sprintf "found: %s"
+                        (Yojson.Safe.to_string @@ Session.aux_op_to_yojson p)) |> Lwt.ignore_result
+                    in config
+                end
+    in
+    let post_config =
+        List.fold_left func c_data.config_result c_data.node_list
+    in
+    { c_data with config_result = post_config }
+
 let commit world token (req: request_commit) =
     let s = find_session token in
     let proposed_config = Session.get_proposed_config world s in
@@ -297,7 +332,9 @@ let commit world token (req: request_commit) =
         | true ->
             if not req_dry_run then
                 let post_commit_data =
-                    Session.post_process_commit world s result_commit_data
+(*                    Session.post_process_commit world s result_commit_data
+                      *)
+                    debug_post_process_commit world s result_commit_data
                 in
                 let () = (Lwt_log.debug @@ Printf.sprintf "post_config: %s" (CT.render_config post_commit_data.config_result)) |> Lwt.ignore_result
                 in
