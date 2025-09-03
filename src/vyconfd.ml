@@ -332,9 +332,10 @@ let commit world token (req: request_commit) =
         | true ->
             if not req_dry_run then
                 let post_commit_data =
-(*                    Session.post_process_commit world s result_commit_data
-                      *)
-                    debug_post_process_commit world s result_commit_data
+                    Session.post_process_commit world s result_commit_data
+
+(*                    debug_post_process_commit world s result_commit_data
+ *)
                 in
                 let () = (Lwt_log.debug @@ Printf.sprintf "post_config: %s" (CT.render_config post_commit_data.config_result)) |> Lwt.ignore_result
                 in
