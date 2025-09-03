@@ -268,15 +268,15 @@ let prepare_commit ?(dry_run=false) w config id pid =
 
 let post_process_commit w s (c_data: CC.commit_data) =
     let ident n v y =
-        if ((y.script_name <> n) || (y.tag_value <> v)) then false
+        if (y.script_name <> n || y.tag_value <> v) then false
         else true
     in
-    let func config (n_data: CC.node_data) =
+    let func (running, proposed) (n_data: CC.node_data) =
         match n_data.reply with
-        | None -> config
+        | None -> (running, proposed)
         | Some reply ->
             match reply.success with
-            | false -> config
+            | false -> (running, proposed)
             | true ->
                 begin
                 let post =
@@ -285,14 +285,12 @@ let post_process_commit w s (c_data: CC.commit_data) =
                     s.aux_changeset
                 in
                 match post with
-                | None -> config
-                | Some p -> apply_changes w p.changeset config
+                | None -> (running, proposed)
+                | Some p ->
+                    (apply_changes w p.changeset running, apply_changes w p.changeset proposed)
                 end
     in
-    let post_config =
-        List.fold_left func c_data.config_result c_data.node_list
-    in
-    { c_data with config_result = post_config }
+    List.fold_left func (c_data.config_result, s.proposed_config) c_data.node_list
 
 let get_config w s id =
     let at = w.running_config in

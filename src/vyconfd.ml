@@ -331,21 +331,16 @@ let commit world token (req: request_commit) =
             Lwt.return {response_tmpl with status=Internal_error; error=(Some out)}
         | true ->
             if not req_dry_run then
-                let post_commit_data =
+                let post_running, post_proposed =
                     Session.post_process_commit world s result_commit_data
-
-(*                    debug_post_process_commit world s result_commit_data
- *)
                 in
-                let () = (Lwt_log.debug @@ Printf.sprintf "post_config: %s" (CT.render_config post_commit_data.config_result)) |> Lwt.ignore_result
-                in
-                world.Session.running_config <- post_commit_data.config_result;
+                world.Session.running_config <- post_running;
                 let session =
                     { s with changeset =
                         Session.get_changeset
                         world
                         world.Session.running_config
-                        proposed_config;
+                        post_proposed;
                         aux_changeset = []; }
                 in Hashtbl.replace sessions token session
             else ();
