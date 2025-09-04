@@ -266,7 +266,7 @@ let prepare_commit ?(dry_run=false) w config id pid =
     in
     CC.make_commit_data ~dry_run:dry_run rt at config id pid
 
-let post_process_commit w s (c_data: CC.commit_data) =
+let post_process_commit w s ((c_data: CC.commit_data), proposed_config) =
     let ident n v y =
         if (y.script_name <> n || y.tag_value <> v) then false
         else true
@@ -290,7 +290,7 @@ let post_process_commit w s (c_data: CC.commit_data) =
                     (apply_changes w p.changeset running, apply_changes w p.changeset proposed)
                 end
     in
-    List.fold_left func (c_data.config_result, s.proposed_config) c_data.node_list
+    List.fold_left func (c_data.config_result, proposed_config) c_data.node_list
 
 let get_config w s id =
     let at = w.running_config in

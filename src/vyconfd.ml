@@ -332,7 +332,7 @@ let commit world token (req: request_commit) =
         | true ->
             if not req_dry_run then
                 let post_running, post_proposed =
-                    Session.post_process_commit world s result_commit_data
+                    Session.post_process_commit world s (result_commit_data, proposed_config)
                 in
                 world.Session.running_config <- post_running;
                 let session =
