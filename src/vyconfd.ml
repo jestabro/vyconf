@@ -33,7 +33,7 @@ let sessions : (string, Session.session_data) Hashtbl.t = Hashtbl.create 10
 
 let commit_lock : string option ref = ref None
 
-let conf_mode_lock : string option ref = ref None
+let conf_mode_lock : int32 option ref = ref None
 
 (* Command line arguments *)
 let args = [
@@ -69,9 +69,10 @@ let make_session_token () =
 let setup_session world (req: request_setup_session) =
     let token = make_session_token () in
     let pid = req.client_pid in
-    let user = "unknown user" in
+    let user = req.user in
+    let sudo_user = req.sudo_user in
     let client_app = Option.value req.client_application ~default:"unknown client" in
-    let () = Hashtbl.add sessions token (Session.make world client_app user pid) in
+    let () = Hashtbl.add sessions token (Session.make world client_app sudo_user user pid) in
     {response_tmpl with output=(Some token)}
 
 let session_of_pid _world (req: request_session_of_pid) =
@@ -96,14 +97,14 @@ let enter_conf_mode req token =
     let lock = !conf_mode_lock in
     let session = Hashtbl.find sessions token in
     match lock with
-    | Some user ->
+    | Some pid ->
         if req.override_exclusive then aux token session
         else
         {response_tmpl with
            status=Configuration_locked;
-           error=Some (Printf.sprintf "Configuration was locked by %s" user)}
+           error=Some (Printf.sprintf "Configuration was locked by %ld" pid)}
     | None ->
-        if req.exclusive then (conf_mode_lock := Some session.user; aux token session)
+        if req.exclusive then (conf_mode_lock := Some session.client_pid; aux token session)
         else aux token session
 
 let exit_conf_mode world token =

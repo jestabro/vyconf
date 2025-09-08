@@ -34,7 +34,18 @@ let call_op ?(out_format="plain") ?(config_format="curly") socket token op path 
             match o with
             | OpSetupSession ->
                 let pid = Int32.of_int (Unix.getppid ()) in
-                let%lwt resp = Vyconf_client.setup_session client "vyconf_client_session" pid in
+                let user =
+                    try Some (Sys.getenv "USER")
+                    with Not_found -> None
+                in
+                let sudo_user =
+                    try Some (Sys.getenv "SUDO_USER")
+                    with Not_found -> None
+                in
+                let%lwt resp =
+                    Vyconf_client.setup_session client
+                    "vyconf_client_session" sudo_user user pid
+                in
                 begin
                     match resp with
                     | Ok c -> Vyconf_client.get_token c

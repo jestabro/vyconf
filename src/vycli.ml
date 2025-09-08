@@ -68,7 +68,15 @@ let main socket op path out_format config_format =
                 end
             | OpSetupSession ->
                 let pid = Int32.of_int (Unix.getppid ()) in
-                let%lwt resp = setup_session client "vycli" pid in
+                let user =
+                    try Some (Sys.getenv "USER")
+                    with Not_found -> None
+                in
+                let sudo_user =
+                    try Some (Sys.getenv "SUDO_USER")
+                    with Not_found -> None
+                in
+                let%lwt resp = setup_session client "vycli" sudo_user user pid in
                 begin
                     match resp with
                     | Ok c -> get_token c
