@@ -15,6 +15,8 @@ type call = {
 type commit = {
   session_id : string;
   session_pid : int32 option;
+  sudo_user : string option;
+  user : string option;
   dry_run : bool;
   atomic : bool;
   background : bool;
@@ -45,6 +47,8 @@ let rec default_call
 let rec default_commit 
   ?session_id:((session_id:string) = "")
   ?session_pid:((session_pid:int32 option) = None)
+  ?sudo_user:((sudo_user:string option) = None)
+  ?user:((user:string option) = None)
   ?dry_run:((dry_run:bool) = false)
   ?atomic:((atomic:bool) = false)
   ?background:((background:bool) = false)
@@ -53,6 +57,8 @@ let rec default_commit
   () : commit  = {
   session_id;
   session_pid;
+  sudo_user;
+  user;
   dry_run;
   atomic;
   background;
@@ -87,6 +93,8 @@ let default_call_mutable () : call_mutable = {
 type commit_mutable = {
   mutable session_id : string;
   mutable session_pid : int32 option;
+  mutable sudo_user : string option;
+  mutable user : string option;
   mutable dry_run : bool;
   mutable atomic : bool;
   mutable background : bool;
@@ -97,6 +105,8 @@ type commit_mutable = {
 let default_commit_mutable () : commit_mutable = {
   session_id = "";
   session_pid = None;
+  sudo_user = None;
+  user = None;
   dry_run = false;
   atomic = false;
   background = false;
@@ -128,6 +138,8 @@ let rec pp_commit fmt (v:commit) =
   let pp_i fmt () =
     Pbrt.Pp.pp_record_field ~first:true "session_id" Pbrt.Pp.pp_string fmt v.session_id;
     Pbrt.Pp.pp_record_field ~first:false "session_pid" (Pbrt.Pp.pp_option Pbrt.Pp.pp_int32) fmt v.session_pid;
+    Pbrt.Pp.pp_record_field ~first:false "sudo_user" (Pbrt.Pp.pp_option Pbrt.Pp.pp_string) fmt v.sudo_user;
+    Pbrt.Pp.pp_record_field ~first:false "user" (Pbrt.Pp.pp_option Pbrt.Pp.pp_string) fmt v.user;
     Pbrt.Pp.pp_record_field ~first:false "dry_run" Pbrt.Pp.pp_bool fmt v.dry_run;
     Pbrt.Pp.pp_record_field ~first:false "atomic" Pbrt.Pp.pp_bool fmt v.atomic;
     Pbrt.Pp.pp_record_field ~first:false "background" Pbrt.Pp.pp_bool fmt v.background;
@@ -179,21 +191,33 @@ let rec encode_pb_commit (v:commit) encoder =
     Pbrt.Encoder.key 2 Pbrt.Varint encoder; 
   | None -> ();
   end;
+  begin match v.sudo_user with
+  | Some x -> 
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 3 Pbrt.Bytes encoder; 
+  | None -> ();
+  end;
+  begin match v.user with
+  | Some x -> 
+    Pbrt.Encoder.string x encoder;
+    Pbrt.Encoder.key 4 Pbrt.Bytes encoder; 
+  | None -> ();
+  end;
   Pbrt.Encoder.bool v.dry_run encoder;
-  Pbrt.Encoder.key 3 Pbrt.Varint encoder; 
-  Pbrt.Encoder.bool v.atomic encoder;
-  Pbrt.Encoder.key 4 Pbrt.Varint encoder; 
-  Pbrt.Encoder.bool v.background encoder;
   Pbrt.Encoder.key 5 Pbrt.Varint encoder; 
+  Pbrt.Encoder.bool v.atomic encoder;
+  Pbrt.Encoder.key 6 Pbrt.Varint encoder; 
+  Pbrt.Encoder.bool v.background encoder;
+  Pbrt.Encoder.key 7 Pbrt.Varint encoder; 
   begin match v.init with
   | Some x -> 
     Pbrt.Encoder.nested encode_pb_status x encoder;
-    Pbrt.Encoder.key 6 Pbrt.Bytes encoder; 
+    Pbrt.Encoder.key 8 Pbrt.Bytes encoder; 
   | None -> ();
   end;
   Pbrt.List_util.rev_iter_with (fun x encoder -> 
     Pbrt.Encoder.nested encode_pb_call x encoder;
-    Pbrt.Encoder.key 7 Pbrt.Bytes encoder; 
+    Pbrt.Encoder.key 9 Pbrt.Bytes encoder; 
   ) v.calls encoder;
   ()
 
@@ -289,31 +313,41 @@ let rec decode_pb_commit d =
     end
     | Some (2, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(commit), field(2)" pk
-    | Some (3, Pbrt.Varint) -> begin
-      v.dry_run <- Pbrt.Decoder.bool d; dry_run_is_set := true;
+    | Some (3, Pbrt.Bytes) -> begin
+      v.sudo_user <- Some (Pbrt.Decoder.string d);
     end
     | Some (3, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(commit), field(3)" pk
-    | Some (4, Pbrt.Varint) -> begin
-      v.atomic <- Pbrt.Decoder.bool d; atomic_is_set := true;
+    | Some (4, Pbrt.Bytes) -> begin
+      v.user <- Some (Pbrt.Decoder.string d);
     end
     | Some (4, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(commit), field(4)" pk
     | Some (5, Pbrt.Varint) -> begin
-      v.background <- Pbrt.Decoder.bool d; background_is_set := true;
+      v.dry_run <- Pbrt.Decoder.bool d; dry_run_is_set := true;
     end
     | Some (5, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(commit), field(5)" pk
-    | Some (6, Pbrt.Bytes) -> begin
-      v.init <- Some (decode_pb_status (Pbrt.Decoder.nested d));
+    | Some (6, Pbrt.Varint) -> begin
+      v.atomic <- Pbrt.Decoder.bool d; atomic_is_set := true;
     end
     | Some (6, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(commit), field(6)" pk
-    | Some (7, Pbrt.Bytes) -> begin
-      v.calls <- (decode_pb_call (Pbrt.Decoder.nested d)) :: v.calls;
+    | Some (7, Pbrt.Varint) -> begin
+      v.background <- Pbrt.Decoder.bool d; background_is_set := true;
     end
     | Some (7, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(commit), field(7)" pk
+    | Some (8, Pbrt.Bytes) -> begin
+      v.init <- Some (decode_pb_status (Pbrt.Decoder.nested d));
+    end
+    | Some (8, pk) -> 
+      Pbrt.Decoder.unexpected_payload "Message(commit), field(8)" pk
+    | Some (9, Pbrt.Bytes) -> begin
+      v.calls <- (decode_pb_call (Pbrt.Decoder.nested d)) :: v.calls;
+    end
+    | Some (9, pk) -> 
+      Pbrt.Decoder.unexpected_payload "Message(commit), field(9)" pk
     | Some (_, payload_kind) -> Pbrt.Decoder.skip d payload_kind
   done;
   begin if not !background_is_set then Pbrt.Decoder.missing_field "background" end;
@@ -323,6 +357,8 @@ let rec decode_pb_commit d =
   ({
     session_id = v.session_id;
     session_pid = v.session_pid;
+    sudo_user = v.sudo_user;
+    user = v.user;
     dry_run = v.dry_run;
     atomic = v.atomic;
     background = v.background;

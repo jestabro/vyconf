@@ -13,10 +13,12 @@ message Call {
 message Commit {
     required string session_id = 1;
     optional int32 session_pid = 2;
-    required bool dry_run = 3;
-    required bool atomic = 4;
-    required bool background = 5;
+    optional string sudo_user = 3;
+    optional string user = 4;
+    required bool dry_run = 5;
+    required bool atomic = 6;
+    required bool background = 7;
 
-    optional Status init = 6;
-    repeated Call calls = 7;
+    optional Status init = 8;
+    repeated Call calls = 9;
 }

@@ -22,6 +22,8 @@ type call = {
 type commit = {
   session_id : string;
   session_pid : int32 option;
+  sudo_user : string option;
+  user : string option;
   dry_run : bool;
   atomic : bool;
   background : bool;
@@ -51,6 +53,8 @@ val default_call :
 val default_commit : 
   ?session_id:string ->
   ?session_pid:int32 option ->
+  ?sudo_user:string option ->
+  ?user:string option ->
   ?dry_run:bool ->
   ?atomic:bool ->
   ?background:bool ->

@@ -309,6 +309,8 @@ let commit world token (req: request_commit) =
         proposed_config
         token
         s.client_pid
+        s.sudo_user
+        s.user
     in
     let%lwt () = (Lwt_log.debug @@ Printf.sprintf "before commit\n") in
     let%lwt received_commit_data = VC.do_commit commit_data in

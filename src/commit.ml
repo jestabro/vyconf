@@ -40,6 +40,8 @@ let default_node_data = {
 type commit_data = {
     session_id: string;
     session_pid: int32 option;
+    sudo_user: string option;
+    user: string option;
     dry_run: bool;
     atomic: bool;
     background: bool;
@@ -53,6 +55,8 @@ type commit_data = {
 let default_commit_data = {
     session_id = "";
     session_pid = None;
+    sudo_user = None;
+    user = None ;
     dry_run = false;
     atomic = false;
     background = false;
@@ -239,12 +243,14 @@ let commit_update c_data =
             | Some _ -> config_result_update acc_data nd
     in List.fold_left func c_data c_data.node_list
 
-let make_commit_data ?(dry_run=false) rt at wt id pid =
+let make_commit_data ?(dry_run=false) rt at wt id pid sudo_user user =
     let diff = CD.diff_tree [] at wt in
     let del_list, add_list = calculate_priority_lists rt diff in
     { default_commit_data with
       session_id = id;
       session_pid = Some pid;
+      sudo_user = sudo_user;
+      user = user;
       dry_run = dry_run;
       config_diff = diff;
       config_result = CT.get_subtree diff ["inter"];
