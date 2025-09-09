@@ -22,8 +22,8 @@ type session_data = {
     changeset: cfg_op list;
     mutable aux_changeset: aux_op list;
     client_app: string;
-    user: string option;
-    sudo_user: string option;
+    client_user: string;
+    client_sudo_user: string;
     client_pid: int32
 }
 
@@ -31,7 +31,7 @@ exception Session_error of string
 
 val sprint_changeset : aux_op list -> string
 
-val make : world -> string -> string option -> string option -> int32 -> session_data
+val make : world -> string -> string -> string -> int32 -> session_data
 
 val set_modified : session_data -> session_data
 
@@ -69,7 +69,7 @@ val list_children : world -> session_data -> string list -> string list
 
 val string_of_op : cfg_op -> string
 
-val prepare_commit : ?dry_run:bool -> world -> Vyos1x.Config_tree.t -> string -> int32 -> string option -> string option -> Commitd_client.Commit.commit_data
+val prepare_commit : ?dry_run:bool -> world -> Vyos1x.Config_tree.t -> string -> int32 -> string -> string -> Commitd_client.Commit.commit_data
 
 val post_process_commit : world -> session_data -> Commitd_client.Commit.commit_data * Vyos1x.Config_tree.t -> Vyos1x.Config_tree.t * Vyos1x.Config_tree.t
 

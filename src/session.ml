@@ -35,8 +35,8 @@ type session_data = {
     changeset: cfg_op list;
     mutable aux_changeset: aux_op list;
     client_app: string;
-    user: string option;
-    sudo_user: string option;
+    client_user: string;
+    client_sudo_user: string;
     client_pid: int32;
 }
 
@@ -47,8 +47,8 @@ let make world client_app sudo_user user pid = {
     changeset = [];
     aux_changeset = [];
     client_app = client_app;
-    user = user;
-    sudo_user = sudo_user;
+    client_user = user;
+    client_sudo_user = sudo_user;
     client_pid = pid;
 }
 

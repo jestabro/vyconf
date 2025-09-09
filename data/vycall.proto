@@ -12,9 +12,9 @@ message Call {
 
 message Commit {
     required string session_id = 1;
-    optional int32 session_pid = 2;
-    optional string sudo_user = 3;
-    optional string user = 4;
+    required int32 session_pid = 2;
+    required string sudo_user = 3;
+    required string user = 4;
     required bool dry_run = 5;
     required bool atomic = 6;
     required bool background = 7;

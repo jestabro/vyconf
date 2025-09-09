@@ -14,8 +14,8 @@ type request_setup_session = {
   client_pid : int32;
   client_application : string option;
   on_behalf_of : int32 option;
-  user : string option;
-  sudo_user : string option;
+  client_user : string option;
+  client_sudo_user : string option;
 }
 
 type request_session_of_pid = {
@@ -221,14 +221,14 @@ let rec default_request_setup_session
   ?client_pid:((client_pid:int32) = 0l)
   ?client_application:((client_application:string option) = None)
   ?on_behalf_of:((on_behalf_of:int32 option) = None)
-  ?user:((user:string option) = None)
-  ?sudo_user:((sudo_user:string option) = None)
+  ?client_user:((client_user:string option) = None)
+  ?client_sudo_user:((client_sudo_user:string option) = None)
   () : request_setup_session  = {
   client_pid;
   client_application;
   on_behalf_of;
-  user;
-  sudo_user;
+  client_user;
+  client_sudo_user;
 }
 
 let rec default_request_session_of_pid 
@@ -473,16 +473,16 @@ type request_setup_session_mutable = {
   mutable client_pid : int32;
   mutable client_application : string option;
   mutable on_behalf_of : int32 option;
-  mutable user : string option;
-  mutable sudo_user : string option;
+  mutable client_user : string option;
+  mutable client_sudo_user : string option;
 }
 
 let default_request_setup_session_mutable () : request_setup_session_mutable = {
   client_pid = 0l;
   client_application = None;
   on_behalf_of = None;
-  user = None;
-  sudo_user = None;
+  client_user = None;
+  client_sudo_user = None;
 }
 
 type request_session_of_pid_mutable = {
@@ -798,8 +798,8 @@ let rec pp_request_setup_session fmt (v:request_setup_session) =
     Pbrt.Pp.pp_record_field ~first:true "client_pid" Pbrt.Pp.pp_int32 fmt v.client_pid;
     Pbrt.Pp.pp_record_field ~first:false "client_application" (Pbrt.Pp.pp_option Pbrt.Pp.pp_string) fmt v.client_application;
     Pbrt.Pp.pp_record_field ~first:false "on_behalf_of" (Pbrt.Pp.pp_option Pbrt.Pp.pp_int32) fmt v.on_behalf_of;
-    Pbrt.Pp.pp_record_field ~first:false "user" (Pbrt.Pp.pp_option Pbrt.Pp.pp_string) fmt v.user;
-    Pbrt.Pp.pp_record_field ~first:false "sudo_user" (Pbrt.Pp.pp_option Pbrt.Pp.pp_string) fmt v.sudo_user;
+    Pbrt.Pp.pp_record_field ~first:false "client_user" (Pbrt.Pp.pp_option Pbrt.Pp.pp_string) fmt v.client_user;
+    Pbrt.Pp.pp_record_field ~first:false "client_sudo_user" (Pbrt.Pp.pp_option Pbrt.Pp.pp_string) fmt v.client_sudo_user;
   in
   Pbrt.Pp.pp_brk pp_i fmt ()
 
@@ -1096,13 +1096,13 @@ let rec encode_pb_request_setup_session (v:request_setup_session) encoder =
     Pbrt.Encoder.key 3 Pbrt.Varint encoder; 
   | None -> ();
   end;
-  begin match v.user with
+  begin match v.client_user with
   | Some x -> 
     Pbrt.Encoder.string x encoder;
     Pbrt.Encoder.key 4 Pbrt.Bytes encoder; 
   | None -> ();
   end;
-  begin match v.sudo_user with
+  begin match v.client_sudo_user with
   | Some x -> 
     Pbrt.Encoder.string x encoder;
     Pbrt.Encoder.key 5 Pbrt.Bytes encoder; 
@@ -1601,12 +1601,12 @@ let rec decode_pb_request_setup_session d =
     | Some (3, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(request_setup_session), field(3)" pk
     | Some (4, Pbrt.Bytes) -> begin
-      v.user <- Some (Pbrt.Decoder.string d);
+      v.client_user <- Some (Pbrt.Decoder.string d);
     end
     | Some (4, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(request_setup_session), field(4)" pk
     | Some (5, Pbrt.Bytes) -> begin
-      v.sudo_user <- Some (Pbrt.Decoder.string d);
+      v.client_sudo_user <- Some (Pbrt.Decoder.string d);
     end
     | Some (5, pk) -> 
       Pbrt.Decoder.unexpected_payload "Message(request_setup_session), field(5)" pk
@@ -1617,8 +1617,8 @@ let rec decode_pb_request_setup_session d =
     client_pid = v.client_pid;
     client_application = v.client_application;
     on_behalf_of = v.on_behalf_of;
-    user = v.user;
-    sudo_user = v.sudo_user;
+    client_user = v.client_user;
+    client_sudo_user = v.client_sudo_user;
   } : request_setup_session)
 
 let rec decode_pb_request_session_of_pid d =

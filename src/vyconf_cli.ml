@@ -40,12 +40,12 @@ let in_cli_config_session () =
 let get_session () =
     let pid = Int32.of_int (Unix.getppid()) in
     let user =
-        try Some (Sys.getenv "USER")
-        with Not_found -> None
+        try Sys.getenv "USER"
+        with Not_found -> ""
     in
     let sudo_user =
-        try Some (Sys.getenv "SUDO_USER")
-        with Not_found -> None
+        try Sys.getenv "SUDO_USER"
+        with Not_found -> ""
     in
     let socket = "/var/run/vyconfd.sock" in
     let config_format = config_format_of_string "curly" in

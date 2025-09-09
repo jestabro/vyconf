@@ -69,8 +69,16 @@ let make_session_token () =
 let setup_session world (req: request_setup_session) =
     let token = make_session_token () in
     let pid = req.client_pid in
-    let user = req.user in
-    let sudo_user = req.sudo_user in
+    let user =
+        match req.client_user with
+        | None -> ""
+        | Some u -> u
+    in
+    let sudo_user =
+        match req.client_sudo_user with
+        | None -> ""
+        | Some u -> u
+    in
     let client_app = Option.value req.client_application ~default:"unknown client" in
     let () = Hashtbl.add sessions token (Session.make world client_app sudo_user user pid) in
     {response_tmpl with output=(Some token)}
@@ -309,8 +317,8 @@ let commit world token (req: request_commit) =
         proposed_config
         token
         s.client_pid
-        s.sudo_user
-        s.user
+        s.client_sudo_user
+        s.client_user
     in
     let%lwt () = (Lwt_log.debug @@ Printf.sprintf "before commit\n") in
     let%lwt received_commit_data = VC.do_commit commit_data in
