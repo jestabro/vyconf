@@ -251,21 +251,49 @@ let save w s file =
     | Error e -> raise (Session_error (Printf.sprintf "Error saving config: %s" e))
     | Ok () -> s
 
+let write_running_cache w =
+    let vc = w.vyconf_config in
+    try
+        let () =
+            IC.write_internal_atomic
+            w.running_config
+            (FP.concat vc.session_dir vc.running_cache);
+        in Ok ()
+    with
+        Vyos1x.Internal.Write_error msg ->
+            let msg =
+                Printf.sprintf "Write error caching running config: %s" msg
+            in Error msg
+
+let write_session_cache w config =
+    let vc = w.vyconf_config in
+    try
+        let () =
+            IC.write_internal
+            config
+            (FP.concat vc.session_dir vc.session_cache);
+        in Ok ()
+    with
+        Vyos1x.Internal.Write_error msg ->
+            let msg =
+                Printf.sprintf "Write error caching session config: %s" msg
+            in Error msg
+
 let prepare_commit ?(dry_run=false) w config id pid sudo_user user =
     let at = w.running_config in
     let rt = w.reference_tree in
     let vc = w.vyconf_config in
     let () =
-        try
-            IC.write_internal at (FP.concat vc.session_dir vc.running_cache)
-        with
-            Vyos1x.Internal.Write_error msg -> raise (Session_error msg)
+        let res = write_running_cache w in
+        match res with
+        | Ok () -> ()
+        | Error msg -> raise (Session_error msg)
     in
     let () =
-        try
-            IC.write_internal config (FP.concat vc.session_dir vc.session_cache)
-        with
-            Vyos1x.Internal.Write_error msg -> raise (Session_error msg)
+        let res = write_session_cache w config in
+        match res with
+        | Ok () -> ()
+        | Error msg -> raise (Session_error msg)
     in
     CC.make_commit_data ~dry_run:dry_run rt at config id pid sudo_user user
 

@@ -69,6 +69,10 @@ val list_children : world -> session_data -> string list -> string list
 
 val string_of_op : cfg_op -> string
 
+val write_running_cache : world -> (unit, string) result
+
+val write_session_cache : world -> (unit, string) result
+
 val prepare_commit : ?dry_run:bool -> world -> Vyos1x.Config_tree.t -> string -> int32 -> string -> string -> Commitd_client.Commit.commit_data
 
 val post_process_commit : world -> session_data -> Commitd_client.Commit.commit_data * Vyos1x.Config_tree.t -> Vyos1x.Config_tree.t * Vyos1x.Config_tree.t
