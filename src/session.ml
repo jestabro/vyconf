@@ -379,6 +379,11 @@ let save w s file =
     | Error e -> raise (Session_error (Printf.sprintf "Error saving config: %s" e))
     | Ok () -> s
 
+let config_unsaved w s file =
+    let tmp_save = "/tmp/config.running" in
+    let _ = save w s tmp_save in
+    not (Vyos1x.Util.file_compare ~ignore_line_prefix:"//" tmp_save file)
+
 let write_running_cache w =
     (* alert exn Internal.write_internal:
         [Internal.Write_error] caught
