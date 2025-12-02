@@ -413,7 +413,7 @@ let config_unsaved world token (req: request_config_unsaved) =
         | None -> defaults.legacy_config_path
         | Some file -> file
     in
-    if Session.config_unsaved world (find_session token) saved_file
+    if Session.config_unsaved world (find_session token) saved_file token
     then response_tmpl
     else {response_tmpl with status=Fail}
 
