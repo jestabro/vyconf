@@ -105,7 +105,7 @@ let main op path =
         | "" -> Lwt.return 0
         | _ ->
         let%lwt () =
-            Lwt_io.write Lwt_io.stdout (Printf.sprintf "%s\n" s) in Lwt.return 0
+            Lwt_io.write Lwt_io.stdout (Printf.sprintf "%s\n" (Vyos1x.Config_file.unescape_backslash s)) in Lwt.return 0
         end
     | Error e ->
         begin
