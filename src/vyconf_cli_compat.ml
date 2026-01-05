@@ -29,6 +29,20 @@ let op_of_arg s =
     | "getCompletionEnv" -> OpGetCompletionEnv
     | _ -> failwith (Printf.sprintf "Unknown operation %s" s)
 
+let op_to_arg s =
+    match s with
+    | OpSetEditLevel -> "getEditEnv"
+    | OpSetEditLevelUp -> "getEditUpEnv"
+    | OpResetEditLevel -> "getEditResetEnv"
+    | OpGetEditLevel -> "getEditLevelStr"
+    | OpEditLevelRoot -> "editLevelAtRoot"
+    | OpShowConfig -> "showCfg"
+    | OpSessionChanged -> "sessionChanged"
+    | OpConfigUnsaved -> "sessionUnsaved"
+    | OpReferencePathExists -> "validateTmplPath"
+    | OpGetPathType -> "getNodeType"
+    | OpGetCompletionEnv -> "getCompletionEnv"
+
 let in_cli_config_session () =
     let env = Unix.environment () in
     let res = Array.find_opt (fun c -> String.starts_with ~prefix:"_OFR_CONFIGURE" c) env
@@ -83,6 +97,13 @@ let close_session () =
     | Error e -> Error e |> Lwt.return
 
 let main op path =
+    let%lwt () =
+    let%lwt l =
+        Lwt_log.file ~template:"$(date) $(name)[$(pid)]: $(message)" ~mode:`Append ~file_name:"/run/log/suppl.log" ()
+    in Lwt_log.default := l; Lwt.return_unit
+    in
+    let%lwt () = Lwt_log.notice @@ (Printf.sprintf "Op is %s; path is %s" (op_to_arg op) (Vyos1x.Util.string_of_list path))
+    in
     let%lwt client = get_session () in
     let%lwt result =
     match client with
