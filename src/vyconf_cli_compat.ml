@@ -127,21 +127,21 @@ let main op path =
 
 let () =
     if (Array.length Sys.argv) < 2 then
-        let () = print_endline "Must specify operation" in exit 1
+        let () = prerr_endline "Must specify operation" in exit 1
     else
     let path_list = Array.to_list (Array.sub Sys.argv 2 (Array.length Sys.argv - 2))
     in
     let op =
         try
             op_of_arg Sys.argv.(1)
-        with Failure msg -> let () = print_endline msg in exit 1
+        with Failure msg -> let () = prerr_endline msg in exit 1
     in
     match op, path_list with
     | OpSetEditLevel, []
     | OpReferencePathExists, []
     | OpGetPathType, [] ->
-        let () = print_endline "Must specify config path" in exit 1
+        let () = prerr_endline "Must specify config path" in exit 1
     | OpGetCompletionEnv, [] | OpGetCompletionEnv, [_] ->
-        let () = print_endline "Must specify command and at least one component" in exit 1
+        let () = prerr_endline "Must specify command and at least one component" in exit 1
     | _, _ ->
         let result = Lwt_main.run (main op path_list) in exit result
