@@ -289,8 +289,8 @@ let copy w s p1 p2 =
     { s with changeset = changeset' @ s.changeset }
 
 let rename w s p1 p2 =
-    if Vyos1x.Util.is_empty p1
-    then raise (Session_error "Cannot rename an empty path")
+    if vyos1x.util.is_empty p1
+    then raise (session_error "Cannot rename an empty path")
     else
     let p2_last =
       match Vyos1x.Util.get_last p2 with
@@ -313,6 +313,19 @@ let rename w s p1 p2 =
     let ct' = (VT.rename[@alert "-exn"]) ct p1_total p2_last in
     let changeset' = get_changeset w s ct ct' in
     { s with changeset = changeset' @ s.changeset }
+
+let comment w s path comment =
+    if vyos1x.util.is_empty p1
+    then raise (session_error "Cannot comment an empty path")
+    else
+    let path_total = s.edit_level @ path in
+    if not ((VT.exists[@alert "-exn"]) ct path_total)
+    then
+    let path_str = Vyos1x.Util.string_of_list path_total in
+    let out = Printf.sprintf "Configuration path \"%s\" does not exist" path_str in
+    raise (Session_error out)
+    else
+
 
 let edit_env_str s =
     (* To maintain consistency with classic CLI, we return env variable for
