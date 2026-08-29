@@ -44,7 +44,8 @@ let test_validate_any_valid test_ctxt =
 
 let test_validate_any_invalid test_ctxt =
     let cs = [VC.Regex "\\d+"; VC.Regex "[a-z]+"] in
-    assert_equal (VC.validate_any (get_dir test_ctxt) cs "AAAA") None
+    let res = VC.validate_any (get_dir test_ctxt) cs "AAAA" in
+    assert_bool "All validators invalid" (Option.is_some res)
 
 let test_validate_any_no_constraints test_ctxt =
     let cs = [] in

@@ -35,7 +35,7 @@ let test_validate_path_leaf_valid test_ctxt =
 
 let test_validate_path_leaf_invalid test_ctxt =
     let r = VT.make RT.default_data "" in
-    let r = (RT.load_from_xml[@alert "-exn"]) r (in_testdata_dir test_ctxt ["interface_definition_sample.xml"]) in
+    let r = RT.load_from_xml r (in_testdata_dir test_ctxt ["interface_definition_sample.xml"]) in
     assert_equal (raises_validation_error (fun () -> ignore @@ RT.validate_path (get_dir test_ctxt) r ["system"; "host-name"; "1234"])) true
 
 let test_validate_path_leaf_incomplete test_ctxt =
