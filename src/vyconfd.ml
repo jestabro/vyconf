@@ -556,22 +556,44 @@ let rec handle_connection world ic oc () =
             Lwt.async (fun () -> Lwt_io.close ic >>= fun () -> Lwt_io.close
             oc)) |> Lwt.return
             *)
-    | End_of_file ->
+    | End_of_file -> Lwt.return (Lwt_log.ign_log ~level:Lwt_log.Info "Connection closed")
+
+    (*
         Lwt.try_bind
         (fun () -> Lwt.return (Lwt_log.ign_log ~level:Lwt_log.Info "Connection closed"))
         (fun () -> Lwt.async (fun () -> Lwt_io.close ic >>= fun () -> Lwt_io.close oc); Lwt.return ())
         (fun e ->
             Lwt.async (fun () -> Lwt_io.close ic >>= fun () -> Lwt_io.close oc);
             Lwt.return (Lwt_log.ign_error (Printexc.to_string e)))
+*)
+
+let close_channels ic oc =
+  Lwt.catch
+    (fun () ->
+      Lwt_io.close ic >>= fun () -> Lwt_io.close oc)
+    (fun exn ->
+      Lwt_log.error ~exn "Error closing client channels")
 
 let accept_connection world conn =
     let fd, _ = conn in
     let ic = Lwt_io.of_fd ~mode:Lwt_io.Input fd in
     let oc = Lwt_io.of_fd ~mode:Lwt_io.Output fd in
+    Lwt.try_bind
+    (fun () -> handle_connection world ic oc ())
+    (fun () ->
+        Lwt.async(fun () -> close_channels ic oc);
+        Lwt.return (Lwt_log.ign_log ~level:Lwt_log.Info "New connection"))
+    (fun e ->
+        Lwt.async(fun () -> close_channels ic oc);
+        Lwt.return (Lwt_log.ign_error (Printexc.to_string e)))
+
+
+    (*
     Lwt.on_failure
     (handle_connection world ic oc ())
     (fun e -> Lwt_log.ign_error (Printexc.to_string e));
     Lwt.return (Lwt_log.ign_log ~level:Lwt_log.Info "New connection")
+*)
 
 let main_loop basepath world () =
     let open Session in
