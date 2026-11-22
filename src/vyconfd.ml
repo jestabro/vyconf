@@ -548,14 +548,26 @@ let rec handle_connection world ic oc () =
         let%lwt () = Lwt_log.error e in
         let%lwt () = send_response oc ({response_tmpl with status=Fail; error=(Some e)}) in
         handle_connection world ic oc ()
-    | End_of_file -> Lwt_log.info "Connection closed" >>= (fun () -> Lwt_io.close ic) >>= return
+(*     | End_of_file -> Lwt_log.info "Connection closed" >>= Lwt.return *)
+    | End_of_file -> Lwt.return (Lwt_log.ign_log ~level:Lwt_log.Info "Connection closed")
 
 let accept_connection world conn =
     let fd, _ = conn in
+    Lwt_log.ign_log ~level:Lwt_log.Info "New connection";
     let ic = Lwt_io.of_fd ~mode:Lwt_io.Input fd in
     let oc = Lwt_io.of_fd ~mode:Lwt_io.Output fd in
-    Lwt.on_failure (handle_connection world ic oc ()) (fun e -> Lwt_log.ign_error (Printexc.to_string e));
-    Lwt_log.info "New connection" >>= return
+    Lwt.finalize
+    (fun () -> handle_connection world ic oc ())
+    (fun () ->
+        Lwt_io.close ic >>= fun () ->
+        Lwt_io.close oc)
+(*     |> Lwt.ignore_result *)
+    (* ignore_result allows the server to instantly listen for the next client
+       instead of waiting for this client to disconnect *)
+
+(*     Lwt.on_failure (handle_connection world ic oc ()) (fun e -> Lwt_log.ign_error (Printexc.to_string e)); *)
+
+(*     Lwt_log.info "New connection" >>= return *)
 
 let main_loop basepath world () =
     let open Session in
