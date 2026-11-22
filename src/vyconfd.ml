@@ -550,9 +550,19 @@ let rec handle_connection world ic oc () =
         handle_connection world ic oc ()
 (*     | End_of_file -> Lwt_log.info "Connection closed" >>= (fun () ->
     Lwt_io.close ic >>= fun () -> Lwt_io.close oc) >>= return *)
+(*     | End_of_file -> *)
+(*
+    | End_of_file -> Lwt_log.info "Connection closed" >>= (func () ->
+            Lwt.async (fun () -> Lwt_io.close ic >>= fun () -> Lwt_io.close
+            oc)) |> Lwt.return
+            *)
     | End_of_file ->
-        Lwt.return (Lwt.async (fun () -> Lwt_io.close ic >>= fun () -> Lwt_io.close oc);
-        Lwt_log.ign_log ~level:Lwt_log.Info "Connection closed")
+        Lwt.try_bind
+        (fun () -> Lwt.return (Lwt_log.ign_log ~level:Lwt_log.Info "Connection closed"))
+        (fun () -> Lwt.async (fun () -> Lwt_io.close ic >>= fun () -> Lwt_io.close oc); Lwt.return ())
+        (fun e ->
+            Lwt.async (fun () -> Lwt_io.close ic >>= fun () -> Lwt_io.close oc);
+            Lwt.return (Lwt_log.ign_error (Printexc.to_string e)))
 
 let accept_connection world conn =
     let fd, _ = conn in
