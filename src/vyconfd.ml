@@ -548,24 +548,8 @@ let rec handle_connection world ic oc () =
         let%lwt () = Lwt_log.error e in
         let%lwt () = send_response oc ({response_tmpl with status=Fail; error=(Some e)}) in
         handle_connection world ic oc ()
-(*     | End_of_file -> Lwt_log.info "Connection closed" >>= (fun () ->
-    Lwt_io.close ic >>= fun () -> Lwt_io.close oc) >>= return *)
-(*     | End_of_file -> *)
-(*
-    | End_of_file -> Lwt_log.info "Connection closed" >>= (func () ->
-            Lwt.async (fun () -> Lwt_io.close ic >>= fun () -> Lwt_io.close
-            oc)) |> Lwt.return
-            *)
-    | End_of_file -> Lwt.return (Lwt_log.ign_log ~level:Lwt_log.Info "Connection closed")
-
-    (*
-        Lwt.try_bind
-        (fun () -> Lwt.return (Lwt_log.ign_log ~level:Lwt_log.Info "Connection closed"))
-        (fun () -> Lwt.async (fun () -> Lwt_io.close ic >>= fun () -> Lwt_io.close oc); Lwt.return ())
-        (fun e ->
-            Lwt.async (fun () -> Lwt_io.close ic >>= fun () -> Lwt_io.close oc);
-            Lwt.return (Lwt_log.ign_error (Printexc.to_string e)))
-*)
+    | End_of_file ->
+        Lwt_log.ign_log ~level:Lwt_log.Info "Connection closed"; Lwt.return ()
 
 let close_channels ic oc =
   Lwt.catch
@@ -582,18 +566,12 @@ let accept_connection world conn =
     (fun () -> handle_connection world ic oc ())
     (fun () ->
         Lwt.async(fun () -> close_channels ic oc);
-        Lwt.return (Lwt_log.ign_log ~level:Lwt_log.Info "New connection"))
+        Lwt_log.ign_log ~level:Lwt_log.Info "New connection";
+        Lwt.return ())
     (fun e ->
         Lwt.async(fun () -> close_channels ic oc);
-        Lwt.return (Lwt_log.ign_error (Printexc.to_string e)))
-
-
-    (*
-    Lwt.on_failure
-    (handle_connection world ic oc ())
-    (fun e -> Lwt_log.ign_error (Printexc.to_string e));
-    Lwt.return (Lwt_log.ign_log ~level:Lwt_log.Info "New connection")
-*)
+        Lwt_log.ign_error (Printexc.to_string e);
+        Lwt.return ())
 
 let main_loop basepath world () =
     let open Session in
